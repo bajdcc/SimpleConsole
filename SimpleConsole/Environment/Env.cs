@@ -9,7 +9,10 @@ namespace SimpleConsole
 {
     class Env
     {
+        private const int STACK_DEPTH = 1000;
         private List<Dictionary<string, Expr>> envStack = new List<Dictionary<string, Expr>>();
+
+        public bool LockVariable { set; get; } = false;
 
         public Env()
         {
@@ -18,6 +21,8 @@ namespace SimpleConsole
 
         public void pushNewEnv()
         {
+            if (envStack.Count > STACK_DEPTH)
+                throw new SCException("堆栈溢出");
             envStack.Insert(0, new Dictionary<string, Expr>());
         }
 
@@ -38,6 +43,12 @@ namespace SimpleConsole
         {
             if (envStack[0].ContainsKey(name))
                 return envStack[0][name];
+            if (envStack[envStack.Count - 1].ContainsKey(name))
+            {
+                var exp = envStack[envStack.Count - 1][name];
+                if (exp is Fun)
+                    return exp;
+            }
             return null;
         }
 

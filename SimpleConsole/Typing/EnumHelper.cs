@@ -8,7 +8,7 @@ namespace SimpleConsole.Typing
 {
     class EnumHelper
     {
-        public static TAttr GetAttrOfEnum<TAttr, TEnum>(object value)
+        internal static TAttr GetAttrOfEnum<TAttr, TEnum>(object value)
             where TAttr : Attribute
         {
             var enumType = typeof(TEnum);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SimpleConsole.Typing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,9 @@ namespace SimpleConsole.Expression
 {
     abstract class Expr
     {
-        public virtual double eval(Env env)
+        public virtual Result eval(Env env)
         {
-            return 0.0;
+            return Result.Empty;
         }
     }
 }

@@ -43,14 +43,17 @@
     <Compile Include="Environment\Env.cs" />
     <Compile Include="Exception\SCException.cs" />
     <Compile Include="Expression\Binop.cs" />
+    <Compile Include="Expression\BuiltinFun.cs" />
     <Compile Include="Expression\Expr.cs" />
     <Compile Include="Expression\Fun.cs" />
     <Compile Include="Expression\Proc.cs" />
     <Compile Include="Expression\Val.cs" />
+    <Compile Include="Interpreter\Builtin.cs" />
     <Compile Include="Interpreter\Interpreter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Typing\EnumHelper.cs" />
     <Compile Include="Typing\OpType.cs" />
+    <Compile Include="Typing\Result.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

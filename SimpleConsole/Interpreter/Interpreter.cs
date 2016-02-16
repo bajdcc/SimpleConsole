@@ -12,18 +12,24 @@ namespace SimpleConsole
     public class Interpreter
     {
         private static Regex rgxMain = new Regex(
-            "=>|[-+*/%=\\(\\)]|[A-Za-z_][A-Za-z0-9_]*|\\d*(?:\\.?\\d+)",
+            "=>|[-+*/%=\\(\\)]|[A-Za-z_][A-Za-z0-9_]*|(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][+-]?\\d+)?",
             RegexOptions.Compiled);
         private Env env = new Env();
         private List<string> tokens;
+        private Builtin builtin = new Builtin();
 
-        public double? input(string input)
+        public Interpreter()
+        {
+            builtin.builtin(this, env);
+        }
+
+        public Result input(string input)
         {
             tokens = tokenize(input);
             return start();
         }
 
-        public double? input(string input, out string str)
+        public Result input(string input, out string str)
         {
             tokens = tokenize(input);
             Expr exp;
@@ -40,8 +46,6 @@ namespace SimpleConsole
             {
                 tokens.Add(m.Groups[0].Value);
             }
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine(string.Join(" ", tokens));
             return tokens;
         }
 
@@ -61,6 +65,17 @@ namespace SimpleConsole
             return str;
         }
 
+        private string pop(string message)
+        {
+            if (!available())
+                error(message);
+            if (tokens.Count == 0)
+                error("缺少参数");
+            var str = tokens.First();
+            tokens.RemoveAt(0);
+            return str;
+        }
+
         private bool available()
         {
             return tokens.Count > 0;
@@ -73,6 +88,21 @@ namespace SimpleConsole
             return l;
         }
 
+        private Val getValFromToken(string tok)
+        {
+            long l;
+            if (long.TryParse(tok, out l))
+            {
+                return new Val() { result = new Result() { type = ResultType.Long, val = new List<object>() { l } } };
+            }
+            double d;
+            if (double.TryParse(tok, out d))
+            {
+                return new Val() { result = new Result() { type = ResultType.Double, val = new List<object>() { d } } };
+            }
+            return null;
+        }
+
         private void error(string message)
         {
             throw new SCException(message);
@@ -80,20 +110,28 @@ namespace SimpleConsole
 
         ///////////////////
 
-        private double? start()
+        private Result start()
         {
+            if (!available())
+                return Result.Empty;
             env.clear();
             var exp = expr();
+            if (exp is Fun)
+                return Result.Empty;
             var val = exp.eval(env);
             if (available())
                 error("多余参数");
             return val;
         }
 
-        private double? start(out Expr exp)
+        private Result start(out Expr exp)
         {
+            if (!available())
+                error("输入为空");
             env.clear();
             exp = expr();
+            if (exp is Fun)
+                return Result.Empty;
             var val = exp.eval(env);
             if (available())
                 error("多余参数");
@@ -104,17 +142,43 @@ namespace SimpleConsole
         {
             pop();
             var args = takeUntil("=>");
-            pop();
+            if (args.Count == 0)
+                error("缺少函数名");
+            pop("缺少'=>'");
             var fname = args[0];
             args.RemoveAt(0);
+            var fun = new Fun() { name = fname, limit = true, args = args, writable = !env.LockVariable };
+            env.putValue(fname, fun);
             env.pushNewEnv();
             foreach (var item in args)
             {
                 env.putValue(item, new Val() { name = item });
             }
-            var exp = expr();
+            fun.exp = expr();
             env.popEnv();
-            env.putValue(fname, new Fun() { name = fname, args = args, exp = exp });
+            return env.queryValue(fname);
+        }
+
+        private Expr fnx()
+        {
+            pop();
+            var args = takeUntil("=>");
+            if (args.Count == 0)
+                error("缺少函数名");
+            pop("缺少'=>'");
+            var fname = args[0];
+            args.RemoveAt(0);
+            if (args.Count != 2)
+                error("必须有两个参数");
+            var fun = new Fun() { name = fname, limit = false, args = args, writable = !env.LockVariable };
+            env.putValue(fname, fun);
+            env.pushNewEnv();
+            foreach (var item in args)
+            {
+                env.putValue(item, new Val() { name = item });
+            }
+            fun.exp = expr();
+            env.popEnv();
             return env.queryValue(fname);
         }
 
@@ -179,19 +243,27 @@ namespace SimpleConsole
             {
                 return fn();
             }
-            pop();
-            double val;
-            if (double.TryParse(tok, out val))
+            if (tok == "fnx")
             {
-                return new Val() { val = val };
+                return fnx();
+            }
+            pop();
+            {
+                var v = getValFromToken(tok);
+                if (v != null)
+                    return v;
             }
             var op = OpTypeHelper.GetTypeOfString(tok);
             if (op != OpType.Unknown)
             {
-                if (double.TryParse(tok + top(), out val))
+                if (available())
                 {
-                    pop();
-                    return new Val() { val = val };
+                    tok += top();
+                    {
+                        var v = getValFromToken(tok);
+                        if (v != null)
+                            return v;
+                    }
                 }
                 error($"非法的操作符'{tok}'");
             }
@@ -215,13 +287,24 @@ namespace SimpleConsole
             {
                 if (available() && top() == "=")
                 {
-                    return new Val() { name = tok };
+                    return new Val() { name = tok, writable = !env.LockVariable };
                 }
                 var fun = ter as Fun;
                 var proc = new Proc() { fun = fun, args = new List<Expr>() };
-                for (int i = 0; i < fun.args.Count; i++)
+                if (fun.limit)
                 {
-                    proc.args.Add(expr());
+                    for (int i = 0; i < fun.args.Count; i++)
+                    {
+                        proc.args.Add(expr());
+                    }
+                }
+                else
+                {
+                    proc.args.Add(new Val() { name = pop("缺少参数") });
+                    while (available() && top() != ")")
+                    {
+                        proc.args.Add(expr());
+                    }
                 }
                 return proc;
             }

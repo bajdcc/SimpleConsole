@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SimpleConsole.Typing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,16 +9,29 @@ namespace SimpleConsole.Expression
 {
     class Val : Expr
     {
+        /// <summary>
+        /// 变量名
+        /// </summary>
         public string name { set; get; }
-        public double? val { set; get; }
 
-        public override double eval(Env env)
+        /// <summary>
+        /// 结果
+        /// </summary>
+        public Result result { set; get; } = Result.Empty;
+
+        /// <summary>
+        /// 可修改
+        /// </summary>
+        public bool writable { set; get; } = true;
+
+        public override Result eval(Env env)
         {
-            return val ?? ((env.queryValue(name) as Val).val ?? 0.0);
+            return result;
         }
+
         public override string ToString()
         {
-            return name == null ? (val ?? 0.0).ToString() : name;
+            return name ?? result.ToString();
         }
-    }
+    }        
 }
