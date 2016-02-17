@@ -29,6 +29,7 @@ namespace SimpleConsole.Typing
                     select new { type = g.Key, count = g.Count() };
             if (t.Count() == 1)
             {
+                type = t.Single().type;
                 val = evalArgs.Select(a => a.val).Aggregate((a, b) => a.Concat(b));
             }
             else
@@ -168,11 +169,23 @@ namespace SimpleConsole.Typing
             throw new SCException("不支持多个元素与多个元素之间的运算");
         }
 
+        /// <summary>
+        /// 向量化运算 - 强制转换
+        /// </summary>
+        /// <param name="conv"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public Result par1(Func<object, object> conv, ResultType type)
         {
             return new Result() { type = type, val = val.Select(a => conv(a)) };
         }
 
+        /// <summary>
+        /// 向量化运算 - 动态转换
+        /// </summary>
+        /// <param name="conv1"></param>
+        /// <param name="conv2"></param>
+        /// <returns></returns>
         public Result par1a(Func<long, long> conv1, Func<double, double> conv2)
         {            
             switch (type)
@@ -186,6 +199,12 @@ namespace SimpleConsole.Typing
             }
         }
 
+        /// <summary>
+        /// 两个参数
+        /// </summary>
+        /// <param name="conv"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public Result par2(Func<object, object, object> conv, ResultType type)
         {
             if (val.Count() != 2)
@@ -193,16 +212,20 @@ namespace SimpleConsole.Typing
             return new Result() { type = type, val = new List<object>() { conv(val.First(), val.Last()) } };
         }
 
+        /// <summary>
+        /// 归约
+        /// </summary>
+        /// <param name="conv1"></param>
+        /// <param name="conv2"></param>
+        /// <returns></returns>
         public Result par2a(Func<long, long, long> conv1, Func<double, double, double> conv2)
         {
-            if (val.Count() != 2)
-                throw new SCException("必须有两个参数");
             switch (type)
             {
                 case ResultType.Long:
-                    return new Result() { type = type, val = new List<object>() { conv1(castLong().First(), castLong().Last()) } };
+                    return new Result() { type = type, val = new List<object>() { castLong().Aggregate(conv1) } };
                 case ResultType.Double:
-                    return new Result() { type = type, val = new List<object>() { conv2(castDouble().First(), castDouble().Last()) } };
+                    return new Result() { type = type, val = new List<object>() { castDouble().Aggregate(conv2) } };
                 default:
                     return Result.Empty;
             }

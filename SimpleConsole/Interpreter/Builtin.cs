@@ -43,6 +43,7 @@ namespace SimpleConsole
             mapBuiltins.Add("round", a => a.par1(b => Math.Round(Convert.ToDouble(b)), ResultType.Double));
             mapBuiltins.Add("pow", a => a.par2((x, y) => Math.Pow(Convert.ToDouble(x), Convert.ToDouble(y)), ResultType.Double));
             mapBuiltins.Add("max", a => a.par2a((x, y) => Math.Max(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Max(Convert.ToDouble(x), Convert.ToDouble(y))));
+            mapBuiltins.Add("min", a => a.par2a((x, y) => Math.Min(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Min(Convert.ToDouble(x), Convert.ToDouble(y))));
         }
 
         public void builtin(Interpreter intr, Env env)
@@ -54,10 +55,12 @@ namespace SimpleConsole
             var code = @"
 
 ";
+            env.LockVariable = true;
             foreach (var item in code.Split('\n'))
             {
                 intr.input(item);
             }
+            env.LockVariable = false;
             Console.WriteLine("Builtin :: OK");
         }
 

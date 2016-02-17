@@ -301,12 +301,19 @@ namespace SimpleConsole
             }
             if (ter is Val)
             {
+                if (available() && top() == "=")
+                {
+                    if (!(ter as Val).writable)
+                        error("变量不可修改");
+                }
                 return ter;
             }
             else if (ter is Fun)
             {
                 if (available() && top() == "=")
                 {
+                    if (!(ter as Fun).writable)
+                        error("函数不可修改");
                     return new Val() { name = tok, writable = !env.LockVariable };
                 }
                 var fun = ter as Fun;
