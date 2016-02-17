@@ -316,7 +316,7 @@ namespace SimpleConsole
                 }
                 error($"非法的操作符'{tok}'");
             }
-            var ter = env.queryValue(tok);
+            var ter = env.queryValueUnsafe(tok);
             if (ter == null)
             {
                 if (!available() || top() != "=")
@@ -350,10 +350,25 @@ namespace SimpleConsole
                 var proc = new Proc() { fun = fun, args = args };
                 if (fun.limit)
                 {
-                    var count = fun.args.Count();
-                    for (int i = 0; i < count; i++)
+                    if (fun is BuiltinFun)
                     {
-                        args.Add(expr());
+                        var name = pop("缺少参数");
+                        if (!rgxVar.IsMatch(name))
+                            error("参数必须为变量");
+                        args.Add(new Val() { name = name });
+                        var count = fun.args.Count();
+                        for (int i = 0; i < count - 1; i++)
+                        {
+                            args.Add(expr());
+                        }
+                    }
+                    else
+                    {
+                        var count = fun.args.Count();
+                        for (int i = 0; i < count; i++)
+                        {
+                            args.Add(expr());
+                        }
                     }
                 }
                 else

@@ -8,6 +8,14 @@ namespace SimpleConsole.Module
 {
     class MathModule : IModule
     {
+        public string Name
+        {
+            get
+            {
+                return "Math";
+            }
+        }
+
         public void load(IInterpreter itpr, Env env)
         {
             var code = @"

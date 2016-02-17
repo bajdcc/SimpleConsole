@@ -53,6 +53,19 @@ namespace SimpleConsole
                 if (exp is Fun)
                     return exp;
             }
+            throw new SCException($"变量'{name}'不存在");
+        }
+
+        public Expr queryValueUnsafe(string name)
+        {
+            if (envStack[0].ContainsKey(name))
+                return envStack[0][name];
+            if (envStack[envStack.Count - 1].ContainsKey(name))
+            {
+                var exp = envStack[envStack.Count - 1][name];
+                if (exp is Fun)
+                    return exp;
+            }
             return null;
         }
 

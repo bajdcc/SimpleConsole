@@ -9,5 +9,7 @@ namespace SimpleConsole.Module
     interface IModule
     {
         void load(IInterpreter itpr, Env env);
+
+        string Name { get; }
     }
 }

@@ -9,7 +9,12 @@ using System.Threading.Tasks;
 
 namespace SimpleConsole
 {
-    class Builtin
+    interface IBuiltin
+    {
+        void AddBuiltins(string name, Func<Result, Result> func);
+    }
+
+    class Builtin : IBuiltin
     {
         private Dictionary<string, Func<Result, Result>> mapBuiltins = new Dictionary<string, Func<Result, Result>>();
         private IInterpreter itpr;
@@ -23,6 +28,16 @@ namespace SimpleConsole
             IO = io;
         }
 
+        public void AddBuiltins(string name, Func<Result, Result> func)
+        {
+            mapBuiltins.Add(name, func);
+        }
+
+        public void AddModule(IModule module)
+        {
+            mapModules.Add(module.Name, module);
+        }
+
         private void init()
         {
             initCore();
@@ -31,7 +46,10 @@ namespace SimpleConsole
 
         private void initCore()
         {
-            Console.WriteLine("Builtin :: Core");
+            mapBuiltins.Add("list", a => a);
+            mapBuiltins.Add("is_empty", a => a.par0(b => new Result() { val = new List<object>() { b.val.Count() == 0 } }));
+            mapBuiltins.Add("is_single", a => a.par0(b => new Result() { val = new List<object>() { b.val.Count() == 1 } }));
+            mapBuiltins.Add("is_many", a => a.par0(b => new Result() { val = new List<object>() { b.val.Count() > 1 } }));
         }
 
         private void initMath()
@@ -58,7 +76,6 @@ namespace SimpleConsole
             mapBuiltins.Add("min", a => a.par2a((x, y) => Math.Min(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Min(Convert.ToDouble(x), Convert.ToDouble(y))));
             mapBuiltins.Add("sum", a => a.par2a((x, y) => Convert.ToInt64(x) + Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) + Convert.ToDouble(y)));
             mapBuiltins.Add("product", a => a.par2a((x, y) => Convert.ToInt64(x) * Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) * Convert.ToDouble(y)));
-            Console.WriteLine("Builtin :: Math");
         }
 
         public void builtin(IInterpreter itpr, Env env)
@@ -67,35 +84,44 @@ namespace SimpleConsole
             this.env = env;
             Console.WriteLine("Builtin :: Loading...");
             init();
-            mapModules.Add("Math", new MathModule());
 
-            env.putValue("builtin", new BuiltinFun(evalBuiltin)
+            var modules = new IModule[]
             {
-                name = "builtin",
-                limit = false,
-                args = new List<string>() { "name", "args" }
-            });
-            env.putValue("type", new BuiltinFun(evalType)
-            {
-                name = "type",
-                limit = false,
-                args = new List<string>() { "name", "args" }
-            });
-            env.putValue("load", new BuiltinFun(evalLoad)
-            {
-                name = "load",
-                limit = false,
-                args = new List<string>() { "name", "args" }
-            });
+                new CoreModule(),
+                new MathModule(),
+            };
 
-            var code = @"
-";
-            env.LockVariable = true;
-            foreach (var item in code.Split('\n'))
+            foreach (var item in modules)
             {
-                itpr.input(item);
+                Console.WriteLine($"Builtin :: {item.Name}");
+                AddModule(item);
             }
-            env.LockVariable = false;
+
+            var builtinFuncs = new BuiltinFun[]
+            {
+                new BuiltinFun(evalBuiltin)
+                {
+                    name = "builtin",
+                    limit = false,
+                    args = new List<string>() { "name", "args" }
+                },
+                new BuiltinFun(evalType)
+                {
+                    name = "type",
+                    limit = true,
+                    args = new List<string>() { "t" }
+                },
+                new BuiltinFun(evalLoad)
+                {
+                    name = "load",
+                    limit = true,
+                    args = new List<string>() { "name" }
+            }};
+            foreach (var item in builtinFuncs)
+            {
+                item.RegisterToEnv(env);
+            }
+            
             Console.WriteLine("Builtin :: OK");
         }
 

@@ -21,48 +21,42 @@ namespace SimpleConsole.Expression
 
         public override Result eval(Env env)
         {
+            var evalArgs = (fun is BuiltinFun ? args.Skip(1) : args).Select(a => a.eval(env)).ToList();
             var count = fun.args.Count();
-            if (fun is BuiltinFun)
+            env.pushNewEnv();
+            if (fun.limit)
             {
-                var evalArgs = args.Skip(1).Select(a => a.eval(env)).ToList();
-                env.pushNewEnv();
-                if (count == 0)
-                    throw new SCException("至少要有一个实参");
-                env.putValue(fun.args.First(), args.First() as Val);
-                env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(evalArgs) });
-                var v = fun.eval(env);
-                env.popEnv();
-                return v;
-            }
-            else
-            {
-                var evalArgs = args.Select(a => a.eval(env)).ToList();
-                env.pushNewEnv();
-                if (fun.limit)
+                if (fun is BuiltinFun)
+                {
+                    env.putValue(fun.args.First(), args.First());
+                    if (fun.args.Count() > 1)
+                        env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(evalArgs) });
+                }
+                else
                 {
                     for (int i = 0; i < count; i++)
                     {
                         env.putValue(fun.args.ElementAt(i), new Val() { result = evalArgs.ElementAt(i) });
                     }
+                }                
+            }
+            else
+            {
+                if (count == 0)
+                    throw new SCException("至少要有一个实参");
+                if (count == 1)
+                {
+                    env.putValue(fun.args.First(), new Val() { result = new Result(evalArgs) });
                 }
                 else
                 {
-                    if (count == 0)
-                        throw new SCException("至少要有一个实参");
-                    if (count == 1)
-                    {
-                        env.putValue(fun.args.First(), new Val() { result = new Result(evalArgs) });
-                    }
-                    else
-                    {
-                        env.putValue(fun.args.First(), new Val() { result = evalArgs.First() });
-                        env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(evalArgs.Skip(1)) });
-                    }
+                    env.putValue(fun.args.First(), fun is BuiltinFun ? args.First() : new Val() { result = evalArgs.First() });
+                    env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(fun is BuiltinFun ? evalArgs : evalArgs.Skip(1)) });
                 }
-                var v = fun.eval(env);
-                env.popEnv();
-                return v;
             }
+            var v = fun.eval(env);
+            env.popEnv();
+            return v;
         }
 
         public override string ToString()

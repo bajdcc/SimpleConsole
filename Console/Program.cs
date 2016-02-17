@@ -29,7 +29,7 @@ namespace TestConsole
                 catch (Exception e)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"错误：{e}");
+                    Console.WriteLine($"错误：{e.Message}");
                 }
                 finally
                 {

@@ -18,11 +18,18 @@ namespace SimpleConsole.Expression
             writable = false;
         }
 
+        public void RegisterToEnv(Env env)
+        {
+            env.putValue(name, this);
+        }
+
         public override string Name { get { return "Builtin"; } }
 
         public override Result eval(Env env)
         {
             var x = env.queryValue(args.First()) as Val;
+            if (args.Count() == 1)
+                return evalBuiltin(x.name, Result.Empty);
             var xs = env.queryValue(args.Skip(1).First()) as Val;
             return evalBuiltin(x.name, xs.result);
         }
