@@ -17,18 +17,19 @@ namespace SimpleConsole.Expression
         /// <summary>
         /// 实参
         /// </summary>
-        public List<Expr> args { set; get; }
+        public IEnumerable<Expr> args { set; get; }
 
         public override Result eval(Env env)
         {
+            var count = args.Count();
             if (fun is BuiltinFun)
             {
-                var evalArgs = args.Skip(1).Take(args.Count - 1).Select(a => a.eval(env)).ToList();
+                var evalArgs = args.Skip(1).Select(a => a.eval(env)).ToList();
                 env.pushNewEnv();
-                if (args.Count == 0)
+                if (count == 0)
                     throw new SCException("至少要有一个实参");
-                env.putValue(fun.args[0], args[0] as Val);
-                env.putValue(fun.args[1], new Val() { result = new Result(evalArgs) });
+                env.putValue(fun.args.First(), args.First() as Val);
+                env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(evalArgs) });
                 var v = fun.eval(env);
                 env.popEnv();
                 return v;
@@ -39,18 +40,17 @@ namespace SimpleConsole.Expression
                 env.pushNewEnv();
                 if (fun.limit)
                 {
-                    for (int i = 0; i < args.Count; i++)
+                    for (int i = 0; i < count; i++)
                     {
-                        env.putValue(fun.args[i], new Val() { result = evalArgs[i] });
+                        env.putValue(fun.args.ElementAt(i), new Val() { result = evalArgs.ElementAt(i) });
                     }
                 }
                 else
                 {
-                    if (args.Count == 0)
+                    if (count == 0)
                         throw new SCException("至少要有一个实参");
-                    env.putValue(fun.args[0], new Val() { result = evalArgs[0] });
-                    evalArgs.RemoveAt(0);
-                    env.putValue(fun.args[1], new Val() { result = new Result(evalArgs) });
+                    env.putValue(fun.args.First(), new Val() { result = evalArgs.First() });
+                    env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(evalArgs.Skip(1)) });
                 }
                 var v = fun.eval(env);
                 env.popEnv();

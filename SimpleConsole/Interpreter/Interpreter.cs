@@ -2,6 +2,7 @@
 using SimpleConsole.Typing;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,18 +10,33 @@ using System.Threading.Tasks;
 
 namespace SimpleConsole
 {
-    public class Interpreter
+    public interface StandardIO
     {
+        TextReader IN { set; get; }
+        TextWriter OUT { set; get; }
+    }
+
+    public class Interpreter : StandardIO
+    {
+        public TextReader IN { set; get; }
+        public TextWriter OUT { set; get; }
+
         private static Regex rgxMain = new Regex(
             "=>|[-+*/%=\\(\\)]|[A-Za-z_][A-Za-z0-9_]*|(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][+-]?\\d+)?",
             RegexOptions.Compiled);
-        private Env env = new Env();
+        private Env env;
         private List<string> tokens;
         private Builtin builtin = new Builtin();
 
         public Interpreter()
         {
+            env = new Env(this);
+            Console.WriteLine("-----------------------");
+            Console.WriteLine("Simple Console - bajdcc");
+            Console.WriteLine("-----------------------");
+            Console.WriteLine();
             builtin.builtin(this, env);
+            Console.WriteLine();
         }
 
         public Result input(string input)
@@ -53,14 +69,14 @@ namespace SimpleConsole
         {
             if (tokens.Count == 0)
                 error("缺少参数");
-            return tokens.First();
+            return tokens[0];
         }
 
         private string pop()
         {
             if (tokens.Count == 0)
                 error("缺少参数");
-            var str = tokens.First();
+            var str = tokens[0];
             tokens.RemoveAt(0);
             return str;
         }
@@ -71,7 +87,7 @@ namespace SimpleConsole
                 error(message);
             if (tokens.Count == 0)
                 error("缺少参数");
-            var str = tokens.First();
+            var str = tokens[0];
             tokens.RemoveAt(0);
             return str;
         }
@@ -81,10 +97,10 @@ namespace SimpleConsole
             return tokens.Count > 0;
         }
 
-        private List<string> takeUntil(string str)
+        private IEnumerable<string> takeUntil(string str)
         {
             var l = tokens.TakeWhile(a => a != str).ToList();
-            tokens.RemoveRange(0, l.Count);
+            tokens.RemoveRange(0, l.Count());
             return l;
         }
 
@@ -142,11 +158,13 @@ namespace SimpleConsole
         {
             pop();
             var args = takeUntil("=>");
-            if (args.Count == 0)
+            if (args.Count() == 0)
                 error("缺少函数名");
             pop("缺少'=>'");
-            var fname = args[0];
-            args.RemoveAt(0);
+            if (args.Any(a => !char.IsLetter(a.ToCharArray()[0])))
+                error("非法形参");
+            var fname = args.First();
+            args = args.Skip(1);
             var fun = new Fun() { name = fname, limit = true, args = args, writable = !env.LockVariable };
             env.putValue(fname, fun);
             env.pushNewEnv();
@@ -163,12 +181,14 @@ namespace SimpleConsole
         {
             pop();
             var args = takeUntil("=>");
-            if (args.Count == 0)
+            if (args.Count() == 0)
                 error("缺少函数名");
             pop("缺少'=>'");
-            var fname = args[0];
-            args.RemoveAt(0);
-            if (args.Count != 2)
+            if (args.Any(a => !char.IsLetter(a.ToCharArray()[0])))
+                error("非法形参");
+            var fname = args.First();
+            args = args.Skip(1);
+            if (args.Count() != 2)
                 error("必须有两个参数");
             var fun = new Fun() { name = fname, limit = false, args = args, writable = !env.LockVariable };
             env.putValue(fname, fun);
@@ -258,7 +278,7 @@ namespace SimpleConsole
             {
                 if (available())
                 {
-                    tok += top();
+                    tok += pop();
                     {
                         var v = getValFromToken(tok);
                         if (v != null)
@@ -290,20 +310,22 @@ namespace SimpleConsole
                     return new Val() { name = tok, writable = !env.LockVariable };
                 }
                 var fun = ter as Fun;
-                var proc = new Proc() { fun = fun, args = new List<Expr>() };
+                var args = new List<Expr>();
+                var proc = new Proc() { fun = fun, args = args };
                 if (fun.limit)
                 {
-                    for (int i = 0; i < fun.args.Count; i++)
+                    var count = fun.args.Count();
+                    for (int i = 0; i < count; i++)
                     {
-                        proc.args.Add(expr());
+                        args.Add(expr());
                     }
                 }
                 else
                 {
-                    proc.args.Add(new Val() { name = pop("缺少参数") });
+                    args.Add(new Val() { name = pop("缺少参数") });
                     while (available() && top() != ")")
                     {
-                        proc.args.Add(expr());
+                        args.Add(expr());
                     }
                 }
                 return proc;

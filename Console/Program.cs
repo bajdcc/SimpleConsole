@@ -11,11 +11,7 @@ namespace TestConsole
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("-----------------------");
-            Console.WriteLine("Simple Console - bajdcc");
-            Console.WriteLine("-----------------------");
-            Console.WriteLine();
-            var itpr = new Interpreter();
+            var itpr = new Interpreter() { IN = Console.In, OUT = Console.Out };
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.Gray;

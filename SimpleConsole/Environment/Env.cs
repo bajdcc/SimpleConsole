@@ -11,11 +11,13 @@ namespace SimpleConsole
     {
         private const int STACK_DEPTH = 1000;
         private List<Dictionary<string, Expr>> envStack = new List<Dictionary<string, Expr>>();
+        private StandardIO IO; 
 
         public bool LockVariable { set; get; } = false;
 
-        public Env()
+        public Env(StandardIO io)
         {
+            IO = io;
             pushNewEnv();
         }
 
@@ -63,5 +65,4 @@ namespace SimpleConsole
             return string.Join(" ", envStack[0].Keys.OrderBy(a => a));
         }
     }
-
 }

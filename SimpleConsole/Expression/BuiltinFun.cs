@@ -20,8 +20,8 @@ namespace SimpleConsole.Expression
 
         public override Result eval(Env env)
         {
-            var x = env.queryValue(args[0]) as Val;
-            var xs = env.queryValue(args[1]) as Val;
+            var x = env.queryValue(args.First()) as Val;
+            var xs = env.queryValue(args.Skip(1).First()) as Val;
             return evalBuiltin(x.name, xs.result);
         }
 

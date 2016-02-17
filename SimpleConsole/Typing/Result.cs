@@ -15,25 +15,27 @@ namespace SimpleConsole.Typing
     public class Result
     {
         public static readonly Result Empty = new Result();
+        public bool IsEmpty { get { return val.Count() == 0; } }
 
         public Result()
         {
 
         }
 
-        public Result(List<Result> evalArgs)
+        public Result(IEnumerable<Result> evalArgs)
         {
-            var l = new List<object>();
-            foreach (var item in evalArgs)
+            var t = from x in evalArgs
+                    group x by x.type into g
+                    select new { type = g.Key, count = g.Count() };
+            if (t.Count() == 1)
             {
-                l.AddRange(item.val);
+                val = evalArgs.Select(a => a.val).Aggregate((a, b) => a.Concat(b));
             }
-            type = l.Any(a => a is double) ? ResultType.Double : ResultType.Long;
-            if (type == ResultType.Double)
+            else
             {
-                val = l.ConvertAll(a => a is long ? (double)a : a);
+                type = t.Max(a => a.type);
+                val = evalArgs.Select(a => a.cast(type).val).Aggregate((a, b) => a.Concat(b));
             }
-            val = l;
         }
 
         /// <summary>
@@ -45,6 +47,44 @@ namespace SimpleConsole.Typing
         /// 变量值
         /// </summary>
         public IEnumerable<object> val { set; get; } = Enumerable.Empty<object>();
+
+        public IEnumerable<long> castLong()
+        {
+            return castVal(ResultType.Long).Select(a => (long)a); ;
+        }
+
+        public IEnumerable<double> castDouble()
+        {
+            return castVal(ResultType.Double).Select(a => (double)a); ;
+        }
+
+        public Result cast(ResultType type)
+        {
+            if (this.type == type)
+                return this;
+            switch (type)
+            {
+                case ResultType.Long:
+                    return new Result() { type = type, val = val.Select(a => Convert.ToInt64(a)).Cast<object>() };
+                case ResultType.Double:
+                    return new Result() { type = type, val = val.Select(a => Convert.ToDouble(a)).Cast<object>() };
+            }
+            return Result.Empty;
+        }
+
+        public IEnumerable<object> castVal(ResultType type)
+        {
+            if (this.type == type)
+                return val;
+            switch (type)
+            {
+                case ResultType.Long:
+                    return val.Select(a => Convert.ToInt64(a)).Cast<object>();
+                case ResultType.Double:
+                    return val.Select(a => Convert.ToDouble(a)).Cast<object>();
+            }
+            return Enumerable.Empty<object>();
+        }
 
         public override string ToString()
         {
@@ -96,7 +136,7 @@ namespace SimpleConsole.Typing
                         {
                             type = ResultType.Long,
                             val =
-                            new List<object>(v2.val).ConvertAll(a => lop(Convert.ToInt64(a), k1)).Cast<object>()
+                            v2.val.Select(a => lop(Convert.ToInt64(a), k1)).Cast<object>()
                         };
                     }
                     else
@@ -106,7 +146,7 @@ namespace SimpleConsole.Typing
                         {
                             type = ResultType.Double,
                             val =
-                            new List<object>(v2.val).ConvertAll(a => dop(Convert.ToDouble(a), k1)).Cast<object>()
+                            v2.val.Select(a => dop(Convert.ToDouble(a), k1)).Cast<object>()
                         };
                     }
                 }
@@ -117,7 +157,7 @@ namespace SimpleConsole.Typing
                     {
                         type = ResultType.Double,
                         val =
-                        new List<object>(v2.val).ConvertAll(a => dop(Convert.ToDouble(a), k1)).Cast<object>()
+                        v2.val.Select(a => dop(Convert.ToDouble(a), k1)).Cast<object>()
                     };
                 }
             }
@@ -128,14 +168,57 @@ namespace SimpleConsole.Typing
             throw new SCException("不支持多个元素与多个元素之间的运算");
         }
 
-        public Result convert(Func<object, object> conv, ResultType type)
+        public Result par1(Func<object, object> conv, ResultType type)
         {
-            var l = new List<object>();
-            foreach (var item in val)
+            return new Result() { type = type, val = val.Select(a => conv(a)) };
+        }
+
+        public Result par1a(Func<long, long> conv1, Func<double, double> conv2)
+        {            
+            switch (type)
             {
-                l.Add(conv(item));
+                case ResultType.Long:
+                    return new Result() { type = type, val = castLong().Select(a => conv1(a)).Cast<object>() };
+                case ResultType.Double:
+                    return new Result() { type = type, val = castDouble().Select(a => conv2(a)).Cast<object>() };
+                default:
+                    return Result.Empty;
             }
-            return new Result() { type = type, val = l };
+        }
+
+        public Result par2(Func<object, object, object> conv, ResultType type)
+        {
+            if (val.Count() != 2)
+                throw new SCException("必须有两个参数");
+            return new Result() { type = type, val = new List<object>() { conv(val.First(), val.Last()) } };
+        }
+
+        public Result par2a(Func<long, long, long> conv1, Func<double, double, double> conv2)
+        {
+            if (val.Count() != 2)
+                throw new SCException("必须有两个参数");
+            switch (type)
+            {
+                case ResultType.Long:
+                    return new Result() { type = type, val = new List<object>() { conv1(castLong().First(), castLong().Last()) } };
+                case ResultType.Double:
+                    return new Result() { type = type, val = new List<object>() { conv2(castDouble().First(), castDouble().Last()) } };
+                default:
+                    return Result.Empty;
+            }
+        }
+    }
+
+    static class ResultHelper
+    {
+        public static IEnumerable<long> castLong(this Result result)
+        {
+            return result.castVal(ResultType.Long).Select(a => (long)a); ;
+        }
+
+        public static IEnumerable<double> castDouble(this Result result)
+        {
+            return result.castVal(ResultType.Long).Select(a => (double)a); ;
         }
     }
 }

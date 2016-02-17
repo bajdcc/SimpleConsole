@@ -20,7 +20,7 @@ namespace SimpleConsole.Expression
         /// <summary>
         /// 形参
         /// </summary>
-        public List<string> args { set; get; }
+        public IEnumerable<string> args { set; get; }
         /// <summary>
         /// 表达式
         /// </summary>
