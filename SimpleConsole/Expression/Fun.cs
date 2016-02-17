@@ -31,6 +31,8 @@ namespace SimpleConsole.Expression
         /// </summary>
         public bool writable { set; get; } = true;
 
+        public override string Name { get { return "Function"; } }
+
         public override Result eval(Env env)
         {
             return exp.eval(env);
@@ -38,7 +40,7 @@ namespace SimpleConsole.Expression
 
         public override string ToString()
         {
-            return $"fn {name}{string.Concat(args.Select(a => " " + a))} => {exp}";
+            return (limit ? "fn" : "fnx") + $" {name}{string.Concat(args.Select(a => " " + a))} => {exp}";
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using SimpleConsole.Expression;
+using SimpleConsole.Module;
 using SimpleConsole.Typing;
 using System;
 using System.Collections.Generic;
@@ -11,15 +12,26 @@ namespace SimpleConsole
     class Builtin
     {
         private Dictionary<string, Func<Result, Result>> mapBuiltins = new Dictionary<string, Func<Result, Result>>();
+        private IInterpreter itpr;
+        private Env env;
+        private StandardIO IO;
+        private Dictionary<string, IModule> mapModules = new Dictionary<string, IModule>();
+        private HashSet<string> loadedModules = new HashSet<string>();
 
-        public Builtin()
+        public Builtin(StandardIO io)
         {
-            init();
+            IO = io;
         }
 
         private void init()
         {
+            initCore();
             initMath();
+        }
+
+        private void initCore()
+        {
+            Console.WriteLine("Builtin :: Core");
         }
 
         private void initMath()
@@ -44,31 +56,79 @@ namespace SimpleConsole
             mapBuiltins.Add("pow", a => a.par2((x, y) => Math.Pow(Convert.ToDouble(x), Convert.ToDouble(y)), ResultType.Double));
             mapBuiltins.Add("max", a => a.par2a((x, y) => Math.Max(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Max(Convert.ToDouble(x), Convert.ToDouble(y))));
             mapBuiltins.Add("min", a => a.par2a((x, y) => Math.Min(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Min(Convert.ToDouble(x), Convert.ToDouble(y))));
+            mapBuiltins.Add("sum", a => a.par2a((x, y) => Convert.ToInt64(x) + Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) + Convert.ToDouble(y)));
+            mapBuiltins.Add("product", a => a.par2a((x, y) => Convert.ToInt64(x) * Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) * Convert.ToDouble(y)));
+            Console.WriteLine("Builtin :: Math");
         }
 
-        public void builtin(Interpreter intr, Env env)
+        public void builtin(IInterpreter itpr, Env env)
         {
+            this.itpr = itpr;
+            this.env = env;
             Console.WriteLine("Builtin :: Loading...");
-            env.putValue("builtin", new BuiltinFun(eval) { name = "builtin", limit = false,
-                args = new List<string>() { "name", "args" } });
+            init();
+            mapModules.Add("Math", new MathModule());
+
+            env.putValue("builtin", new BuiltinFun(evalBuiltin)
+            {
+                name = "builtin",
+                limit = false,
+                args = new List<string>() { "name", "args" }
+            });
+            env.putValue("type", new BuiltinFun(evalType)
+            {
+                name = "type",
+                limit = false,
+                args = new List<string>() { "name", "args" }
+            });
+            env.putValue("load", new BuiltinFun(evalLoad)
+            {
+                name = "load",
+                limit = false,
+                args = new List<string>() { "name", "args" }
+            });
 
             var code = @"
-
 ";
             env.LockVariable = true;
             foreach (var item in code.Split('\n'))
             {
-                intr.input(item);
+                itpr.input(item);
             }
             env.LockVariable = false;
             Console.WriteLine("Builtin :: OK");
         }
 
-        public Result eval(string name, Result param)
+        public Result evalBuiltin(string name, Result param)
         {
             if (mapBuiltins.ContainsKey(name))
                 return mapBuiltins[name](param);
+            throw new SCException($"'{name}' not found.");
+        }
+
+        public Result evalType(string name, Result param)
+        {
+            var v = env.queryValueAll(name);
+            if (v == null)
+                return new StringResult($"'{name}' not found.");
+            if (v is Val || v is Binop)
+                return new StringResult(v.eval(env));
+            if (v is Fun)
+                return new StringResult(v.Name);
             return Result.Empty;
+        }
+
+        public Result evalLoad(string name, Result param)
+        {
+            if (mapModules.ContainsKey(name))
+            {
+                if (loadedModules.Contains(name))
+                    return new StringResult($"Module :: {name} has been loaded.");
+                loadedModules.Add(name);
+                itpr.addTask(() => mapModules[name].load(itpr, env));
+                return new StringResult($"Module :: {name} loaded.");
+            }
+            return new StringResult($"Module :: {name} not found.");
         }
     }
 }

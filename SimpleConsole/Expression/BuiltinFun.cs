@@ -18,6 +18,8 @@ namespace SimpleConsole.Expression
             writable = false;
         }
 
+        public override string Name { get { return "Builtin"; } }
+
         public override Result eval(Env env)
         {
             var x = env.queryValue(args.First()) as Val;

@@ -21,7 +21,7 @@ namespace SimpleConsole.Expression
 
         public override Result eval(Env env)
         {
-            var count = args.Count();
+            var count = fun.args.Count();
             if (fun is BuiltinFun)
             {
                 var evalArgs = args.Skip(1).Select(a => a.eval(env)).ToList();
@@ -49,8 +49,15 @@ namespace SimpleConsole.Expression
                 {
                     if (count == 0)
                         throw new SCException("至少要有一个实参");
-                    env.putValue(fun.args.First(), new Val() { result = evalArgs.First() });
-                    env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(evalArgs.Skip(1)) });
+                    if (count == 1)
+                    {
+                        env.putValue(fun.args.First(), new Val() { result = new Result(evalArgs) });
+                    }
+                    else
+                    {
+                        env.putValue(fun.args.First(), new Val() { result = evalArgs.First() });
+                        env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(evalArgs.Skip(1)) });
+                    }
                 }
                 var v = fun.eval(env);
                 env.popEnv();

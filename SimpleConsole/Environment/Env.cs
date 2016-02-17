@@ -1,4 +1,5 @@
 ﻿using SimpleConsole.Expression;
+using SimpleConsole.Typing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace SimpleConsole
         private StandardIO IO; 
 
         public bool LockVariable { set; get; } = false;
+        public bool LookAheadFunc { set; get; } = true;
 
         public Env(StandardIO io)
         {
@@ -52,6 +54,23 @@ namespace SimpleConsole
                     return exp;
             }
             return null;
+        }
+
+        public Result eval(string name)
+        {
+            if (name == null)
+                return Result.Empty;
+            return queryValue(name).eval(this);
+        }
+
+        public Expr queryValueAll(string name)
+        {
+            foreach (var item in envStack)
+            {
+                if (item.ContainsKey(name))
+                    return item[name];
+            }
+            throw new SCException("变量不存在");
         }
 
         public void clear()

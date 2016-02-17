@@ -16,7 +16,16 @@ namespace SimpleConsole
         TextWriter OUT { set; get; }
     }
 
-    public class Interpreter : StandardIO
+    public interface IInterpreter
+    {
+        Result input(string input);
+
+        Result input(string input, out string str);
+
+        void addTask(Action task);
+    }
+
+    public class Interpreter : IInterpreter, StandardIO
     {
         public TextReader IN { set; get; }
         public TextWriter OUT { set; get; }
@@ -24,13 +33,18 @@ namespace SimpleConsole
         private static Regex rgxMain = new Regex(
             "=>|[-+*/%=\\(\\)]|[A-Za-z_][A-Za-z0-9_]*|(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][+-]?\\d+)?",
             RegexOptions.Compiled);
+        private static Regex rgxVar = new Regex(
+            "[A-Za-z_][A-Za-z0-9_]*",
+            RegexOptions.Compiled);
         private Env env;
         private List<string> tokens;
-        private Builtin builtin = new Builtin();
+        private Builtin builtin;
+        private Queue<Action> tasks = new Queue<Action>();
 
         public Interpreter()
         {
             env = new Env(this);
+            builtin = new Builtin(this);
             Console.WriteLine("-----------------------");
             Console.WriteLine("Simple Console - bajdcc");
             Console.WriteLine("-----------------------");
@@ -97,6 +111,19 @@ namespace SimpleConsole
             return tokens.Count > 0;
         }
 
+        public void addTask(Action task)
+        {
+            tasks.Enqueue(task);
+        }
+
+        private void execTask()
+        {
+            while (tasks.Count > 0)
+            {
+                tasks.Dequeue()();
+            }
+        }
+
         private IEnumerable<string> takeUntil(string str)
         {
             var l = tokens.TakeWhile(a => a != str).ToList();
@@ -137,6 +164,7 @@ namespace SimpleConsole
             var val = exp.eval(env);
             if (available())
                 error("多余参数");
+            execTask();
             return val;
         }
 
@@ -151,6 +179,7 @@ namespace SimpleConsole
             var val = exp.eval(env);
             if (available())
                 error("多余参数");
+            execTask();
             return val;
         }
 
@@ -161,7 +190,7 @@ namespace SimpleConsole
             if (args.Count() == 0)
                 error("缺少函数名");
             pop("缺少'=>'");
-            if (args.Any(a => !char.IsLetter(a.ToCharArray()[0])))
+            if (args.Any(a => !rgxVar.IsMatch(a)))
                 error("非法形参");
             var fname = args.First();
             args = args.Skip(1);
@@ -184,12 +213,12 @@ namespace SimpleConsole
             if (args.Count() == 0)
                 error("缺少函数名");
             pop("缺少'=>'");
-            if (args.Any(a => !char.IsLetter(a.ToCharArray()[0])))
+            if (args.Any(a => !rgxVar.IsMatch(a)))
                 error("非法形参");
             var fname = args.First();
             args = args.Skip(1);
-            if (args.Count() != 2)
-                error("必须有两个参数");
+            if (args.Count() > 2)
+                error("必须有一或两个参数");
             var fun = new Fun() { name = fname, limit = false, args = args, writable = !env.LockVariable };
             env.putValue(fname, fun);
             env.pushNewEnv();
@@ -329,7 +358,13 @@ namespace SimpleConsole
                 }
                 else
                 {
-                    args.Add(new Val() { name = pop("缺少参数") });
+                    if (fun is BuiltinFun)
+                    {
+                        var name = pop("缺少参数");
+                        if (!rgxVar.IsMatch(name))
+                            error("参数必须为变量");
+                        args.Add(new Val() { name = name });
+                    }
                     while (available() && top() != ")")
                     {
                         args.Add(expr());

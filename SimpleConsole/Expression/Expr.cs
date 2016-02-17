@@ -9,6 +9,8 @@ namespace SimpleConsole.Expression
 {
     abstract class Expr
     {
+        public virtual string Name { get; }
+
         public virtual Result eval(Env env)
         {
             return Result.Empty;

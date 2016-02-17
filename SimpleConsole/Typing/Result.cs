@@ -27,6 +27,8 @@ namespace SimpleConsole.Typing
             var t = from x in evalArgs
                     group x by x.type into g
                     select new { type = g.Key, count = g.Count() };
+            if (t.Count() == 0)
+                return;
             if (t.Count() == 1)
             {
                 type = t.Single().type;
@@ -90,6 +92,11 @@ namespace SimpleConsole.Typing
         public override string ToString()
         {
             return $"[{string.Join(", ", val ?? Enumerable.Empty<object>())}]";
+        }
+
+        public string GetTypeString()
+        {
+            return $"{string.Concat(val.GetType().Name.TakeWhile(char.IsLetter))} :: {val.GetType().GetGenericArguments()[0].Name}";
         }
 
         public static Result operator +(Result v1, Result v2)
@@ -169,6 +176,20 @@ namespace SimpleConsole.Typing
             throw new SCException("不支持多个元素与多个元素之间的运算");
         }
 
+        ///////////////////////////////////////
+
+        /// <summary>
+        /// 单一参数
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public Result par0(Func<Result, Result> conv)
+        {
+            if (val.Count() > 1)
+                throw new SCException("只接受一个参数");
+            return conv(this);
+        }
+
         /// <summary>
         /// 向量化运算 - 强制转换
         /// </summary>
@@ -229,6 +250,28 @@ namespace SimpleConsole.Typing
                 default:
                     return Result.Empty;
             }
+        }
+    }
+
+    public class StringResult : Result
+    {
+        private string desc;
+
+        public StringResult(string desc)
+        {
+            this.desc = desc;
+        }
+
+        public StringResult(Result result)
+        {
+            this.type = result.type;
+            this.val = result.val;
+            this.desc = result.GetTypeString();
+        }
+
+        public override string ToString()
+        {
+            return desc;
         }
     }
 
