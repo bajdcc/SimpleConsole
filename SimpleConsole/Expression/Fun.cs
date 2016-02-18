@@ -35,6 +35,11 @@ namespace SimpleConsole.Expression
 
         public override Result eval(Env env)
         {
+            if (env.isTopEnv())
+            {
+                if (!(limit && args.Count() == 0))
+                    return Result.Empty;
+            }
             return exp.eval(env);
         }
 

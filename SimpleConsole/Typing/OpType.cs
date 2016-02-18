@@ -58,6 +58,9 @@ namespace SimpleConsole.Typing
         [SCOperation("=", 4, 5)]
         Equal,
 
+        [SCOperation("|", 9, 9)]
+        Match,
+
         [SCOperation("+", 10, 10)]
         Add,
 

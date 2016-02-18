@@ -31,7 +31,7 @@ namespace SimpleConsole
         public TextWriter OUT { set; get; }
 
         private static Regex rgxMain = new Regex(
-            "=>|[-+*/%=\\(\\)]|[A-Za-z_][A-Za-z0-9_]*|(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][+-]?\\d+)?",
+            "=>|[-+*/%=\\(\\)\\|]|[A-Za-z_][A-Za-z0-9_]*|(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][+-]?\\d+)?",
             RegexOptions.Compiled);
         private static Regex rgxVar = new Regex(
             "[A-Za-z_][A-Za-z0-9_]*",
@@ -70,7 +70,7 @@ namespace SimpleConsole
 
         private List<string> tokenize(string input)
         {
-            var tokens = new List<string>();            
+            var tokens = new List<string>();
             MatchCollection matches = rgxMain.Matches(input);
             foreach (Match m in matches)
             {
@@ -159,8 +159,6 @@ namespace SimpleConsole
                 return Result.Empty;
             env.clear();
             var exp = expr();
-            if (exp is Fun)
-                return Result.Empty;
             var val = exp.eval(env);
             if (available())
                 error("多余参数");
@@ -174,8 +172,6 @@ namespace SimpleConsole
                 error("输入为空");
             env.clear();
             exp = expr();
-            if (exp is Fun)
-                return Result.Empty;
             var val = exp.eval(env);
             if (available())
                 error("多余参数");
@@ -249,19 +245,15 @@ namespace SimpleConsole
             var t2 = expr();
             if (t2 is Binop)
             {
-                var tt = t2 as Binop;
-                var tx = tt;
-                // 找到tt的最左子结点的父结点tx
-                // 要求：若途中binop不可再分，即brace=true，则中止
-                // 要求：若左结合优先级>=右结合优先级，则置换
-                while (!tx.brace && tx.op1 is Binop && op.GetAttr().LeftLevel < tx.type.GetAttr().RightLevel)
+                var tt = t2.GetMostLeftCombineAtom(op, null);
+                if (tt != null)
                 {
-                    tx = tt.op1 as Binop;
-                }
-                if (tx.brace || op.GetAttr().LeftLevel >= tx.type.GetAttr().RightLevel)
-                {
-                    tx.op1 = new Binop() { op1 = t, op2 = tx.op1, type = op };
-                    return tt;
+                    var tx = tt as Binop;
+                    if (!tx.brace)
+                    {
+                        tx.op1 = new Binop() { op1 = t, op2 = tx.op1, type = op };
+                        return t2;
+                    }
                 }
             }
             return new Binop() { op1 = t, op2 = t2, type = op };

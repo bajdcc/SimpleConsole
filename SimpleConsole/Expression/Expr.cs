@@ -15,5 +15,15 @@ namespace SimpleConsole.Expression
         {
             return Result.Empty;
         }
+
+        /// <summary>
+        /// 返回最左原子子表达式
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public virtual Expr GetMostLeftCombineAtom(OpType type, Expr parent)
+        {
+            return null;
+        }
     }
 }

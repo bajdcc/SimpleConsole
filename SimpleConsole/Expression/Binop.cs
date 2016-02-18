@@ -46,9 +46,25 @@ namespace SimpleConsole.Expression
                     throw new SCException($"未知运算符{type.GetAttr().Description}");
             }
         }
+
         private static string getOpDesc(OpType op)
         {
             return op.GetAttr().Description;
+        }
+
+        /// <summary>
+        /// 递归查找，自下向上返回
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override Expr GetMostLeftCombineAtom(OpType type, Expr parent)
+        {
+            if (brace)
+                return parent ?? this;
+            var atom = op1.GetMostLeftCombineAtom(type, this);
+            if (atom == null)
+                return type.GetAttr().LeftLevel >= this.type.GetAttr().RightLevel ? (parent ?? this) : null;
+            return atom;
         }
 
         public override string ToString()

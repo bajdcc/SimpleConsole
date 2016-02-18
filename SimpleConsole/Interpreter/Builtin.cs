@@ -138,7 +138,7 @@ namespace SimpleConsole
             if (v == null)
                 return new StringResult($"'{name}' not found.");
             if (v is Val || v is Binop)
-                return new StringResult(v.eval(env));
+                return new StringResult(v.eval(env).GetTypeString());
             if (v is Fun)
                 return new StringResult(v.Name);
             return Result.Empty;

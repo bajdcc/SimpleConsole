@@ -96,7 +96,7 @@ namespace SimpleConsole.Typing
 
         public string GetTypeString()
         {
-            return $"{string.Concat(val.GetType().Name.TakeWhile(char.IsLetter))} :: {val.GetType().GetGenericArguments()[0].Name}";
+            return $"{string.Concat(val.GetType().Name.TakeWhile(char.IsLetter))} :: {type}";
         }
 
         public static Result operator +(Result v1, Result v2)
@@ -134,6 +134,8 @@ namespace SimpleConsole.Typing
             }
             if (c1 == 1)
             {
+                if (v2.val.Count() == 0)
+                    return v1;
                 var k = v1.val.Single();
                 if (v1.type == v2.type)
                 {
@@ -144,17 +146,17 @@ namespace SimpleConsole.Typing
                         {
                             type = ResultType.Long,
                             val =
-                            v2.val.Select(a => lop(Convert.ToInt64(a), k1)).Cast<object>()
+                            v2.val.Select(a => lop(k1, Convert.ToInt64(a))).Cast<object>()
                         };
                     }
                     else
                     {
-                        double k1 = Convert.ToInt64(k);
+                        double k1 = Convert.ToDouble(k);
                         return new Result()
                         {
                             type = ResultType.Double,
                             val =
-                            v2.val.Select(a => dop(Convert.ToDouble(a), k1)).Cast<object>()
+                            v2.val.Select(a => dop(k1, Convert.ToDouble(a))).Cast<object>()
                         };
                     }
                 }
@@ -165,7 +167,7 @@ namespace SimpleConsole.Typing
                     {
                         type = ResultType.Double,
                         val =
-                        v2.val.Select(a => dop(Convert.ToDouble(a), k1)).Cast<object>()
+                        v2.val.Select(a => dop(k1, Convert.ToDouble(a))).Cast<object>()
                     };
                 }
             }
@@ -247,6 +249,25 @@ namespace SimpleConsole.Typing
                     return new Result() { type = type, val = new List<object>() { castLong().Aggregate(conv1) } };
                 case ResultType.Double:
                     return new Result() { type = type, val = new List<object>() { castDouble().Aggregate(conv2) } };
+                default:
+                    return Result.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 归约
+        /// </summary>
+        /// <param name="conv1"></param>
+        /// <param name="conv2"></param>
+        /// <returns></returns>
+        public Result par2b(Func<long, long, long> conv1, long seed1, Func<double, double, double> conv2, double seed2)
+        {
+            switch (type)
+            {
+                case ResultType.Long:
+                    return new Result() { type = type, val = new List<object>() { castLong().Aggregate(seed1, conv1) } };
+                case ResultType.Double:
+                    return new Result() { type = type, val = new List<object>() { castDouble().Aggregate(seed2, conv2) } };
                 default:
                     return Result.Empty;
             }

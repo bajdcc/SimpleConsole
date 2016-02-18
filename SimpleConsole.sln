@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "Console\Test
 		{02DDB2F1-1347-4395-834B-B6E84E4E5A0E} = {02DDB2F1-1347-4395-834B-B6E84E4E5A0E}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleConsoleTests", "SimpleConsoleTests\SimpleConsoleTests.csproj", "{EE3FD8FD-9667-41F0-B461-885B3829F83A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{A91B9030-D297-49A8-95CE-93CF4BC8C86F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A91B9030-D297-49A8-95CE-93CF4BC8C86F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A91B9030-D297-49A8-95CE-93CF4BC8C86F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE3FD8FD-9667-41F0-B461-885B3829F83A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE3FD8FD-9667-41F0-B461-885B3829F83A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE3FD8FD-9667-41F0-B461-885B3829F83A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE3FD8FD-9667-41F0-B461-885B3829F83A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

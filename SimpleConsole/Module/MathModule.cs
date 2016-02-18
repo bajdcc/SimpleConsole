@@ -41,7 +41,7 @@ fn pow _ __ => builtin pow _ __
 fnx max _ => builtin max _
 fnx min _ => builtin min _
 fnx sum _ => builtin sum _
-fnx product _ => builtin log _
+fnx product _ => builtin product _
 ";
             env.LockVariable = true;
             foreach (var item in code.Split('\n'))

@@ -35,6 +35,11 @@ namespace SimpleConsole
             envStack.RemoveAt(0);
         }
 
+        public bool isTopEnv()
+        {
+            return envStack.Count == 1;
+        }
+
         public void putValue(string name, Expr exp)
         {
             if (envStack[0].ContainsKey(name))
