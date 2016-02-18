@@ -90,13 +90,15 @@ namespace SimpleConsole.Tests
         public void TestReduce()
         {
             Test("Module :: Math loaded.", "load Math");
-            Test("[]", "fn fib n => match lte n 2 n-1 sum fib n-1 fib n-2");
-            Test("[]", "fn N n => match lte n 1 1 sum 1 a n-1");
+            Test("[]", "fn fib n => lazy match lte n 2 n-1 sum fib n-1 fib n-2");
+            Test("[]", "fn N n => lazy match lte n 1 1 sum 1 N n-1");
+            Test("[]", "fn fib_sum n => lazy if gt n 0 sum fib n fib_sum n-1");
             Test("[1]", "N -1");
             Test("[20]", "N 20");
-            Test("[]", "fn fib n => match lte n 2 n-1 sum fib n-1 fib n-2");
-            Test("[1]", "fib ");
-            Test("[20]", "N 20");
+            Test("[5]", "fib 6");
+            Test("[13]", "fib 8");
+            Test("[33]", "fib_sum 8");
+            Test("[232]", "fib_sum 12");
         }
 
         [TestMethod]

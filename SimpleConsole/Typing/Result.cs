@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SimpleConsole.Expression;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -62,6 +63,11 @@ namespace SimpleConsole.Typing
         /// </summary>
         public IEnumerable<object> val { set; get; } = Enumerable.Empty<object>();
 
+        public bool Bool()
+        {
+            return Convert.ToBoolean(val.First());
+        }
+
         public IEnumerable<long> castLong()
         {
             return castVal(ResultType.Long).Select(a => (long)a); ;
@@ -69,7 +75,7 @@ namespace SimpleConsole.Typing
 
         public IEnumerable<double> castDouble()
         {
-            return castVal(ResultType.Double).Select(a => (double)a); ;
+            return castVal(ResultType.Double).Select(a => (double)a);
         }
 
         public Result cast(ResultType type)

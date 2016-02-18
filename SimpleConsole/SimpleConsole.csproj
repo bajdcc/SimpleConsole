@@ -46,6 +46,7 @@
     <Compile Include="Expression\BuiltinFun.cs" />
     <Compile Include="Expression\Expr.cs" />
     <Compile Include="Expression\Fun.cs" />
+    <Compile Include="Expression\LazyFun.cs" />
     <Compile Include="Expression\Proc.cs" />
     <Compile Include="Expression\Val.cs" />
     <Compile Include="Interpreter\Builtin.cs" />

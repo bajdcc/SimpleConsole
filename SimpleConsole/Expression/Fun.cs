@@ -43,6 +43,11 @@ namespace SimpleConsole.Expression
             return exp.eval(env);
         }
 
+        public void RegisterToEnv(Env env)
+        {
+            env.putValue(name, this);
+        }
+
         public override string ToString()
         {
             return (limit ? "fn" : "fnx") + $" {name}{string.Concat(args.Select(a => " " + a))} => {exp}";

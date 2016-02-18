@@ -365,7 +365,7 @@ namespace SimpleConsole
                 }
                 else
                 {
-                    if (fun is BuiltinFun)
+                    if (fun is BuiltinFun || fun is LazyFun)
                     {
                         var name = pop("缺少参数");
                         if (!rgxVar.IsMatch(name))

@@ -21,6 +21,14 @@ namespace SimpleConsole.Expression
 
         public override Result eval(Env env)
         {
+            if (fun is LazyFun)
+            {
+                if (args.Count() == 1)
+                    throw new SCException("至少需要一个参数");
+                var lazy = fun as LazyFun;
+                var name = (args.First() as Val).name;
+                return lazy.eval(name, args.Skip(1), env);
+            }
             var evalArgs = (fun is BuiltinFun ? args.Skip(1) : args).Select(a => a.eval(env)).ToList();
             var count = fun.args.Count();
             env.pushNewEnv();
