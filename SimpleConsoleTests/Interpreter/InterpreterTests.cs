@@ -74,6 +74,32 @@ namespace SimpleConsole.Tests
         }
 
         [TestMethod]
+        public void TestBool()
+        {
+            Test("[True]", "bool 6");
+            Test("[True]", "not not bool 6.6");
+            Test("[9]", "(if 1 2) | (match 0 6 7)");
+            Test("[True]", "is_empty empty");
+            Test("[]", "empty");
+            Test("[True]", "is_single 7");
+            Test("[False]", "is_many 6");
+            Test("[True]", "is_many 5 6");
+        }
+
+        [TestMethod]
+        public void TestReduce()
+        {
+            Test("Module :: Math loaded.", "load Math");
+            Test("[]", "fn fib n => match lte n 2 n-1 sum fib n-1 fib n-2");
+            Test("[]", "fn N n => match lte n 1 1 sum 1 a n-1");
+            Test("[1]", "N -1");
+            Test("[20]", "N 20");
+            Test("[]", "fn fib n => match lte n 2 n-1 sum fib n-1 fib n-2");
+            Test("[1]", "fib ");
+            Test("[20]", "N 20");
+        }
+
+        [TestMethod]
         public void TestMath()
         {
             Test("Module :: Math loaded.", "load Math");

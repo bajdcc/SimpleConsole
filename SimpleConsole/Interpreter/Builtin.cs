@@ -46,10 +46,30 @@ namespace SimpleConsole
 
         private void initCore()
         {
-            mapBuiltins.Add("list", a => a);
-            mapBuiltins.Add("is_empty", a => a.par0(b => new Result() { val = new List<object>() { b.val.Count() == 0 } }));
-            mapBuiltins.Add("is_single", a => a.par0(b => new Result() { val = new List<object>() { b.val.Count() == 1 } }));
-            mapBuiltins.Add("is_many", a => a.par0(b => new Result() { val = new List<object>() { b.val.Count() > 1 } }));
+            mapBuiltins.Add("empty", a => a.parn(0, b => Result.Empty));
+            mapBuiltins.Add("bool", a => a.parn(1, b => new Result() { val = new List<object> { Convert.ToBoolean(b.val.First()) } }));
+            mapBuiltins.Add("not", a => a.parn(1, b => new Result() { val = new List<object> { !Convert.ToBoolean(b.val.First()) } }));
+            mapBuiltins.Add("is_empty", a => a.parn(b => new Result() { val = new List<object>() { b.val.Count() == 0 } }));
+            mapBuiltins.Add("is_single", a => a.parn(b => new Result() { val = new List<object>() { b.val.Count() == 1 } }));
+            mapBuiltins.Add("is_many", a => a.parn(b => new Result() { val = new List<object>() { b.val.Count() > 1 } }));
+            mapBuiltins.Add("equal", a => a.parn(2, b => b.compare(CompareType.Equal)));
+            mapBuiltins.Add("not_equal", a => a.parn(2, b => b.compare(CompareType.NotEqual)));
+            mapBuiltins.Add("lt", a => a.parn(2, b => b.compare(CompareType.LessThan)));
+            mapBuiltins.Add("gt", a => a.parn(2, b => b.compare(CompareType.GreaterThan)));
+            mapBuiltins.Add("lte", a => a.parn(2, b => b.compare(CompareType.NotGreaterThan)));
+            mapBuiltins.Add("gte", a => a.parn(2, b => b.compare(CompareType.NotLessThan)));
+            mapBuiltins.Add("match", a => a.parn(3, b => new Result()
+            {
+                type = b.type,
+                val =
+                Convert.ToBoolean(b.val.First()) ? b.val.Skip(1).Take(1) : b.val.Skip(2).Take(1)
+            }));
+            mapBuiltins.Add("if", a => a.parn(2, b => new Result()
+            {
+                type = b.type,
+                val =
+                Convert.ToBoolean(b.val.First()) ? b.val.Skip(1).Take(1) : Result.Empty.val
+            }));
         }
 
         private void initMath()
@@ -121,7 +141,17 @@ namespace SimpleConsole
             {
                 item.RegisterToEnv(env);
             }
-            
+
+            var code = @"
+load Core
+";
+            env.LockVariable = true;
+            foreach (var item in code.Split('\n'))
+            {
+                itpr.input(item);
+            }
+            env.LockVariable = false;
+
             Console.WriteLine("Builtin :: OK");
         }
 

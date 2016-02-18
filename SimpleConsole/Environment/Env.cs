@@ -10,7 +10,7 @@ namespace SimpleConsole
 {
     class Env
     {
-        private const int STACK_DEPTH = 1000;
+        private const int STACK_DEPTH = 200;
         private List<Dictionary<string, Expr>> envStack = new List<Dictionary<string, Expr>>();
         private StandardIO IO; 
 
@@ -74,11 +74,14 @@ namespace SimpleConsole
             return null;
         }
 
-        public Result eval(string name)
+        public Result eval(Expr caller, string name)
         {
             if (name == null)
                 return Result.Empty;
-            return queryValue(name).eval(this);
+            var v = queryValue(name);
+            if (v == caller)
+                return Result.Empty;
+            return v.eval(this);
         }
 
         public Expr queryValueAll(string name)

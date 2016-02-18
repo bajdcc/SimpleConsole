@@ -30,6 +30,7 @@ namespace SimpleConsole.Expression
         {
             switch (type)
             {
+                case OpType.Match:
                 case OpType.Add: return op1.eval(env) + op2.eval(env);
                 case OpType.Subtract: return op1.eval(env) - op2.eval(env);
                 case OpType.Multiply: return op1.eval(env) * op2.eval(env);

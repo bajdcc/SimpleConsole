@@ -26,7 +26,7 @@ namespace SimpleConsole.Expression
 
         public override Result eval(Env env)
         {
-            return result.IsEmpty ? env.eval(name) : result;
+            return result.IsEmpty ? env.eval(this, name) : result;
         }
 
         public override string ToString()

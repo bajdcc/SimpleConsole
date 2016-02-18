@@ -12,9 +12,20 @@ namespace SimpleConsole.Typing
         Double,
     }
 
+    public enum CompareType
+    {
+        Equal,
+        NotEqual,
+        LessThan,
+        NotLessThan,
+        GreaterThan,
+        NotGreaterThan,
+    }
+
     public class Result
     {
         public static readonly Result Empty = new Result();
+
         public bool IsEmpty { get { return val.Count() == 0; } }
 
         public Result()
@@ -87,6 +98,76 @@ namespace SimpleConsole.Typing
                     return val.Select(a => Convert.ToDouble(a)).Cast<object>();
             }
             return Enumerable.Empty<object>();
+        }
+
+        public Result compare(CompareType cmp)
+        {
+            bool r;
+            switch (type)
+            {
+                case ResultType.Long:
+                    {
+                        var l = castLong();
+                        var x = l.First();
+                        var y = l.Last();
+                        switch (cmp)
+                        {
+                            case CompareType.Equal:
+                                r = x == y;
+                                break;
+                            case CompareType.NotEqual:
+                                r = x != y;
+                                break;
+                            case CompareType.LessThan:
+                                r = x < y;
+                                break;
+                            case CompareType.NotLessThan:
+                                r = x >= y;
+                                break;
+                            case CompareType.GreaterThan:
+                                r = x > y;
+                                break;
+                            case CompareType.NotGreaterThan:
+                                r = x <= y;
+                                break;
+                            default:
+                                throw new SCException("未知的比较运算符");
+                        }
+                        return new Result() { val = new List<object> { r } };
+                    }
+                case ResultType.Double:
+                    {
+                        var l = castDouble();
+                        var x = l.First();
+                        var y = l.Last();
+                        switch (cmp)
+                        {
+                            case CompareType.Equal:
+                                r = x == y;
+                                break;
+                            case CompareType.NotEqual:
+                                r = x != y;
+                                break;
+                            case CompareType.LessThan:
+                                r = x < y;
+                                break;
+                            case CompareType.NotLessThan:
+                                r = x >= y;
+                                break;
+                            case CompareType.GreaterThan:
+                                r = x > y;
+                                break;
+                            case CompareType.NotGreaterThan:
+                                r = x <= y;
+                                break;
+                            default:
+                                throw new SCException("未知的比较运算符");
+                        }
+                        return new Result() { val = new List<object> { r } };
+                    }
+                default:
+                    throw new SCException("未知的比较数据类型");
+            }
         }
 
         public override string ToString()
@@ -181,14 +262,25 @@ namespace SimpleConsole.Typing
         ///////////////////////////////////////
 
         /// <summary>
-        /// 单一参数
+        /// N个参数
         /// </summary>
-        /// <param name="action"></param>
+        /// <param name="conv"></param>
         /// <returns></returns>
-        public Result par0(Func<Result, Result> conv)
+        public Result parn(Func<Result, Result> conv)
         {
-            if (val.Count() > 1)
-                throw new SCException("只接受一个参数");
+            return conv(this);
+        }
+
+        /// <summary>
+        /// N个参数
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="conv"></param>
+        /// <returns></returns>
+        public Result parn(int count, Func<Result, Result> conv)
+        {
+            if (val.Count() != count)
+                throw new SCException($"只接受{count}个参数");
             return conv(this);
         }
 
@@ -249,25 +341,6 @@ namespace SimpleConsole.Typing
                     return new Result() { type = type, val = new List<object>() { castLong().Aggregate(conv1) } };
                 case ResultType.Double:
                     return new Result() { type = type, val = new List<object>() { castDouble().Aggregate(conv2) } };
-                default:
-                    return Result.Empty;
-            }
-        }
-
-        /// <summary>
-        /// 归约
-        /// </summary>
-        /// <param name="conv1"></param>
-        /// <param name="conv2"></param>
-        /// <returns></returns>
-        public Result par2b(Func<long, long, long> conv1, long seed1, Func<double, double, double> conv2, double seed2)
-        {
-            switch (type)
-            {
-                case ResultType.Long:
-                    return new Result() { type = type, val = new List<object>() { castLong().Aggregate(seed1, conv1) } };
-                case ResultType.Double:
-                    return new Result() { type = type, val = new List<object>() { castDouble().Aggregate(seed2, conv2) } };
                 default:
                     return Result.Empty;
             }

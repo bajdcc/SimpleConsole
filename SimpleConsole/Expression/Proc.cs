@@ -50,8 +50,17 @@ namespace SimpleConsole.Expression
                 }
                 else
                 {
-                    env.putValue(fun.args.First(), fun is BuiltinFun ? args.First() : new Val() { result = evalArgs.First() });
-                    env.putValue(fun.args.Skip(1).First(), new Val() { result = new Result(fun is BuiltinFun ? evalArgs : evalArgs.Skip(1)) });
+                    var arg = new Result(evalArgs);
+                    env.putValue(fun.args.First(), fun is BuiltinFun ? args.First() : new Val()
+                    {
+                        result =
+                        new Result() { type = arg.type, val = arg.val.Take(1) }
+                    });
+                    env.putValue(fun.args.Skip(1).First(), new Val()
+                    {
+                        result =
+                        new Result() { type = arg.type, val = fun is BuiltinFun ? arg.val : arg.val.Skip(1) }
+                    });
                 }
             }
             var v = fun.eval(env);
