@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SimpleConsole
 {
-    public interface StandardIO
+    interface StandardIO
     {
         TextReader IN { set; get; }
         TextWriter OUT { set; get; }
@@ -23,9 +23,11 @@ namespace SimpleConsole
         Result input(string input, out string str);
 
         void addTask(Action task);
+
+        void print(Result val);
     }
 
-    public class Interpreter : IInterpreter, StandardIO
+    class Interpreter : IInterpreter, StandardIO
     {
         public TextReader IN { set; get; }
         public TextWriter OUT { set; get; }

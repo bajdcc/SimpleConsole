@@ -11,7 +11,7 @@ namespace SimpleConsole.Tests
     [TestClass]
     public class InterpreterTests
     {
-        private IInterpreter itpr = new Interpreter() { OUT = Console.Out };
+        private IInterpreter itpr = InterpreterFactory.Create(Console.In, Console.Out);
 
         private void Test(string expect, string input)
         {

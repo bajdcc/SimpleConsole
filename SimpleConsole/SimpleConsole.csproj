@@ -51,6 +51,7 @@
     <Compile Include="Expression\Val.cs" />
     <Compile Include="Interpreter\Builtin.cs" />
     <Compile Include="Interpreter\Interpreter.cs" />
+    <Compile Include="Interpreter\InterpreterFactory.cs" />
     <Compile Include="Module\CoreModule.cs" />
     <Compile Include="Module\IModule.cs" />
     <Compile Include="Module\MathModule.cs" />

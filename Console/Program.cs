@@ -11,7 +11,7 @@ namespace TestConsole
     {
         static void Main(string[] args)
         {
-            var itpr = new Interpreter() { IN = Console.In, OUT = Console.Out };
+            IInterpreter itpr = InterpreterFactory.Create(Console.In, Console.Out);
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.Gray;
