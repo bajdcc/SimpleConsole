@@ -11,7 +11,7 @@ namespace SimpleConsole
     {
         public static IInterpreter Create(TextReader tr, TextWriter tw)
         {
-            return new Interpreter() { IN = tr, OUT = tw };
+            return new Interpreter(tr, tw);
         }
     }
 }

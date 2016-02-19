@@ -44,16 +44,18 @@ namespace SimpleConsole
         private Builtin builtin;
         private Queue<Action> tasks = new Queue<Action>();
 
-        public Interpreter()
+        public Interpreter(TextReader tr, TextWriter tw)
         {
+            IN = tr;
+            OUT = tw;
             env = new Env(this);
             builtin = new Builtin(this);
-            Console.WriteLine("-----------------------");
-            Console.WriteLine("Simple Console - bajdcc");
-            Console.WriteLine("-----------------------");
-            Console.WriteLine();
-            builtin.builtin(this, env);
-            Console.WriteLine();
+            OUT.WriteLine("-----------------------");
+            OUT.WriteLine("Simple Console - bajdcc");
+            OUT.WriteLine("-----------------------");
+            OUT.WriteLine();
+            builtin.builtin(this, this, env);
+            OUT.WriteLine();
         }
 
         public Result input(string input)

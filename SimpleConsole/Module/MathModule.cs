@@ -21,6 +21,8 @@ namespace SimpleConsole.Module
             var code = @"
 E = builtin E
 PI = builtin PI
+fnx square _ => builtin square _
+fnx sqrt _ => builtin sqrt _
 fnx sin _ => builtin sin _
 fnx sin _ => builtin sin _
 fnx cos _ => builtin cos _

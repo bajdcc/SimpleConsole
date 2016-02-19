@@ -88,6 +88,8 @@ namespace SimpleConsole
         {
             AddBuiltin("E", a => a.parn(0, b => new Result() { type = ResultType.Double, val = new List<object>() { Math.E } }));
             AddBuiltin("PI", a => a.parn(0, b => new Result() { type = ResultType.Double, val = new List<object>() { Math.PI } }));
+            AddBuiltin("square", a => a.par1(b => Math.Pow(Convert.ToDouble(b), 2.0), ResultType.Double));
+            AddBuiltin("sqrt", a => a.par1(b => Math.Sqrt(Convert.ToDouble(b)), ResultType.Double));
             AddBuiltin("sin", a => a.par1(b => Math.Sin(Convert.ToDouble(b)), ResultType.Double));
             AddBuiltin("cos", a => a.par1(b => Math.Cos(Convert.ToDouble(b)), ResultType.Double));
             AddBuiltin("tan", a => a.par1(b => Math.Tan(Convert.ToDouble(b)), ResultType.Double));
@@ -112,11 +114,11 @@ namespace SimpleConsole
             AddBuiltin("product", a => a.par2a((x, y) => Convert.ToInt64(x) * Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) * Convert.ToDouble(y)));
         }
 
-        public void builtin(IInterpreter itpr, Env env)
+        public void builtin(IInterpreter itpr, StandardIO io, Env env)
         {
             this.itpr = itpr;
             this.env = env;
-            Console.WriteLine("Builtin :: Loading...");
+            io.OUT.WriteLine("Builtin :: Loading...");
             init();
 
             var modules = new IModule[]
@@ -127,7 +129,7 @@ namespace SimpleConsole
 
             foreach (var item in modules)
             {
-                Console.WriteLine($"Builtin :: {item.Name}");
+                io.OUT.WriteLine($"Builtin :: {item.Name}");
                 AddModule(item);
             }
 
@@ -171,7 +173,7 @@ load Core
             }
             env.LockVariable = false;
 
-            Console.WriteLine("Builtin :: OK");
+            io.OUT.WriteLine("Builtin :: OK");
         }
 
         public Result evalBuiltin(string name, Result param)
