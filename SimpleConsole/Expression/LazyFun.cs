@@ -18,7 +18,7 @@ namespace SimpleConsole.Expression
             writable = false;
         }
 
-        public override string Name { get { return "Builtin"; } }
+        public override string Name { get { return "Lazy"; } }
 
         public Result eval(string name, IEnumerable<Expr> exps, Env env)
         {

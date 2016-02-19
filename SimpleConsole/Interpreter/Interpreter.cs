@@ -33,6 +33,7 @@ namespace SimpleConsole
         private static Regex rgxMain = new Regex(
             "=>|[-+*/%=\\(\\)\\|]|[A-Za-z_][A-Za-z0-9_]*|(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][+-]?\\d+)?",
             RegexOptions.Compiled);
+
         private static Regex rgxVar = new Regex(
             "[A-Za-z_][A-Za-z0-9_]*",
             RegexOptions.Compiled);
@@ -122,6 +123,11 @@ namespace SimpleConsole
             {
                 tasks.Dequeue()();
             }
+        }
+
+        public void print(Result val)
+        {
+            OUT.WriteLine(val);
         }
 
         private IEnumerable<string> takeUntil(string str)

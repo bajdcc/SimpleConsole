@@ -1,6 +1,8 @@
 ﻿using SimpleConsole.Expression;
+using SimpleConsole.Util;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -181,6 +183,13 @@ namespace SimpleConsole.Typing
             return $"[{string.Join(", ", val ?? Enumerable.Empty<object>())}]";
         }
 
+        public virtual void ToString(TextWriter output)
+        {
+            output.Write("[");
+            ", ".Join(val, output);
+            output.Write("[");
+        }
+
         public string GetTypeString()
         {
             return $"{string.Concat(val.GetType().Name.TakeWhile(char.IsLetter))} :: {type}";
@@ -334,6 +343,26 @@ namespace SimpleConsole.Typing
         }
 
         /// <summary>
+        /// Range
+        /// </summary>
+        /// <param name="conv"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public Result par2range()
+        {
+            if (val.Count() != 2)
+                throw new SCException("必须有两个参数");
+            var l = new List<long>();
+            var x = Convert.ToInt64(val.First());
+            var y = Convert.ToInt64(val.Last());
+            for (var i = x; i <= y; i++)
+            {
+                l.Add(x);
+            }
+            return new Result() { val = new LazyRange(Convert.ToInt64(val.First()), Convert.ToInt64(val.Last())) };
+        }
+
+        /// <summary>
         /// 归约
         /// </summary>
         /// <param name="conv1"></param>
@@ -372,6 +401,11 @@ namespace SimpleConsole.Typing
         public override string ToString()
         {
             return desc;
+        }
+
+        public override void ToString(TextWriter output)
+        {
+            output.Write(desc);
         }
     }
 

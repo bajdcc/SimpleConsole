@@ -18,8 +18,8 @@ namespace SimpleConsole
     {
         private Dictionary<string, Func<Result, Result>> mapBuiltins =
             new Dictionary<string, Func<Result, Result>>();
-        private Dictionary<string, Func<IEnumerable<Expr>, Env, Result>> mapLazys =
-            new Dictionary<string, Func<IEnumerable<Expr>, Env, Result>>();
+        private Dictionary<string, Tuple<int, Func<IEnumerable<Expr>, Env, Result>>> mapLazys =
+            new Dictionary<string, Tuple<int, Func<IEnumerable<Expr>, Env, Result>>>();
         private IInterpreter itpr;
         private Env env;
         private StandardIO IO;
@@ -36,9 +36,9 @@ namespace SimpleConsole
             mapBuiltins.Add(name, func);
         }
 
-        public void AddLazy(string name, Func<IEnumerable<Expr>, Env, Result> func)
+        public void AddLazy(string name, int count, Func<IEnumerable<Expr>, Env, Result> func)
         {
-            mapLazys.Add(name, func);
+            mapLazys.Add(name, new Tuple<int, Func<IEnumerable<Expr>, Env, Result>>(count, func));
         }
 
         public void AddModule(IModule module)
@@ -78,12 +78,16 @@ namespace SimpleConsole
                 val =
                 Convert.ToBoolean(b.val.First()) ? b.val.Skip(1).Take(1) : Result.Empty.val
             }));
-            AddLazy("match", (a, env) => a.ElementAt(0).eval(env).Bool() ? a.ElementAt(1).eval(env) : a.ElementAt(2).eval(env));
-            AddLazy("if", (a, env) => a.ElementAt(0).eval(env).Bool() ? a.ElementAt(1).eval(env) : Result.Empty);
+            AddBuiltin("range", a => a.par2range());
+            AddLazy("match", 3, (a, env) => a.ElementAt(0).eval(env).Bool() ? a.ElementAt(1).eval(env) : a.ElementAt(2).eval(env));
+            AddLazy("if", 2, (a, env) => a.ElementAt(0).eval(env).Bool() ? a.ElementAt(1).eval(env) : Result.Empty);
+            AddLazy("dummy", 1, (a, env) => a.ElementAt(0).eval(env));
         }
 
         private void initMath()
         {
+            AddBuiltin("E", a => a.parn(0, b => new Result() { type = ResultType.Double, val = new List<object>() { Math.E } }));
+            AddBuiltin("PI", a => a.parn(0, b => new Result() { type = ResultType.Double, val = new List<object>() { Math.PI } }));
             AddBuiltin("sin", a => a.par1(b => Math.Sin(Convert.ToDouble(b)), ResultType.Double));
             AddBuiltin("cos", a => a.par1(b => Math.Cos(Convert.ToDouble(b)), ResultType.Double));
             AddBuiltin("tan", a => a.par1(b => Math.Tan(Convert.ToDouble(b)), ResultType.Double));
@@ -206,7 +210,10 @@ load Core
         {
             if (mapLazys.ContainsKey(name))
             {
-                return mapLazys[name](exps, env);
+                var lazy = mapLazys[name];
+                if (lazy.Item1 >= 0 && exps.Count() != lazy.Item1)
+                    throw new SCException($"需要{lazy.Item1}个参数");
+                return lazy.Item2(exps, env);
             }
             return new StringResult($"'{name}' not found.");
         }

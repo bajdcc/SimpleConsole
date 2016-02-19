@@ -58,6 +58,7 @@
     <Compile Include="Typing\EnumHelper.cs" />
     <Compile Include="Typing\OpType.cs" />
     <Compile Include="Typing\Result.cs" />
+    <Compile Include="Util\LazyRange.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

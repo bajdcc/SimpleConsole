@@ -10,7 +10,7 @@ namespace SimpleConsole
 {
     class Env
     {
-        private const int STACK_DEPTH = 200;
+        private const int STACK_DEPTH = 500;
         private List<Dictionary<string, Expr>> envStack = new List<Dictionary<string, Expr>>();
         private StandardIO IO; 
 

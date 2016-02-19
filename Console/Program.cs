@@ -24,7 +24,7 @@ namespace TestConsole
                     string str;
                     var val = itpr.input(input, out str);
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine(val);
+                    itpr.print(val);
                 }
                 catch (Exception e)
                 {

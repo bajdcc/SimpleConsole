@@ -19,6 +19,8 @@ namespace SimpleConsole.Module
         public void load(IInterpreter itpr, Env env)
         {
             var code = @"
+E = builtin E
+PI = builtin PI
 fnx sin _ => builtin sin _
 fnx sin _ => builtin sin _
 fnx cos _ => builtin cos _
