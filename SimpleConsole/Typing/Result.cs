@@ -197,31 +197,32 @@ namespace SimpleConsole.Typing
 
         public static Result operator +(Result v1, Result v2)
         {
-            return oper(v1, v2, (a, b) => a + b, (a, b) => a + b, (a, b) => a + b);
+            return oper(v1, v2, (a, b) => a + b, (a, b) => a + b, (b, a) => a + b, (b, a) => a + b);
         }
 
         public static Result operator -(Result v1, Result v2)
         {
-            return oper(v1, v2, (a, b) => a - b, (a, b) => a - b, (a, b) => a - b);
+            return oper(v1, v2, (a, b) => a - b, (a, b) => a - b, (b, a) => a - b, (b, a) => a - b);
         }
 
         public static Result operator *(Result v1, Result v2)
         {
-            return oper(v1, v2, (a, b) => a * b, (a, b) => a * b, (a, b) => a * b);
+            return oper(v1, v2, (a, b) => a * b, (a, b) => a * b, (b, a) => a * b, (b, a) => a * b);
         }
 
         public static Result operator /(Result v1, Result v2)
         {
-            return oper(v1, v2, (a, b) => a / b, (a, b) => a / b, (a, b) => a / b);
+            return oper(v1, v2, (a, b) => a / b, (a, b) => a / b, (b, a) => a / b, (b, a) => a / b);
         }
 
         public static Result operator %(Result v1, Result v2)
         {
-            return oper(v1, v2, (a, b) => a % b, (a, b) => a % b, (a, b) => a % b);
+            return oper(v1, v2, (a, b) => a % b, (a, b) => a % b, (b, a) => a % b, (b, a) => a % b);
         }
 
-        public static Result oper(Result v1, Result v2, Func<Result, Result, Result> swap,
-            Func<long, long, long> lop, Func<double, double, double> dop)
+        private static Result oper(Result v1, Result v2,
+            Func<long, long, long> lop, Func<double, double, double> dop,
+            Func<long, long, long> lopinv, Func<double, double, double> dopinv)
         {
             var c1 = v1.val.Count();
             if (c1 == 0)
@@ -269,7 +270,7 @@ namespace SimpleConsole.Typing
             }
             if (v2.val.Count() <= 1)
             {
-                return swap(v2, v1);
+                return oper(v2, v1, lopinv, dopinv, lop, dop);
             }
             throw new SCException("不支持多个元素与多个元素之间的运算");
         }
