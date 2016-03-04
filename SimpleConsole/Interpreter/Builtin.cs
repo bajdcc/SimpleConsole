@@ -4,122 +4,109 @@ using SimpleConsole.Typing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleConsole
 {
-    interface IBuiltin
+    internal class Builtin
     {
-        void AddBuiltin(string name, Func<Result, Result> func);
-    }
-
-    class Builtin : IBuiltin
-    {
-        private Dictionary<string, Func<Result, Result>> mapBuiltins =
+        private readonly Dictionary<string, Func<Result, Result>> _mapBuiltins =
             new Dictionary<string, Func<Result, Result>>();
-        private Dictionary<string, Tuple<int, Func<IEnumerable<Expr>, Env, Result>>> mapLazys =
-            new Dictionary<string, Tuple<int, Func<IEnumerable<Expr>, Env, Result>>>();
-        private IInterpreter itpr;
-        private Env env;
-        private StandardIO IO;
-        private Dictionary<string, IModule> mapModules = new Dictionary<string, IModule>();
-        private HashSet<string> loadedModules = new HashSet<string>();
+        private readonly Dictionary<string, Tuple<int, Func<IList<Expr>, Env, Result>>> _mapLazys =
+            new Dictionary<string, Tuple<int, Func<IList<Expr>, Env, Result>>>();
+        private IInterpreter _itpr;
+        private Env _env;
+        private readonly Dictionary<string, IModule> _mapModules = new Dictionary<string, IModule>();
+        private readonly HashSet<string> _loadedModules = new HashSet<string>();
 
-        public Builtin(StandardIO io)
+        private void AddBuiltin(string name, Func<Result, Result> func)
         {
-            IO = io;
+            _mapBuiltins.Add(name, func);
         }
 
-        public void AddBuiltin(string name, Func<Result, Result> func)
+        private void AddLazy(string name, int count, Func<IList<Expr>, Env, Result> func)
         {
-            mapBuiltins.Add(name, func);
+            _mapLazys.Add(name, new Tuple<int, Func<IList<Expr>, Env, Result>>(count, func));
         }
 
-        public void AddLazy(string name, int count, Func<IEnumerable<Expr>, Env, Result> func)
+        private void AddModule(IModule module)
         {
-            mapLazys.Add(name, new Tuple<int, Func<IEnumerable<Expr>, Env, Result>>(count, func));
+            _mapModules.Add(module.Name, module);
         }
 
-        public void AddModule(IModule module)
+        private void Init()
         {
-            mapModules.Add(module.Name, module);
+            InitCore();
+            InitMath();
         }
 
-        private void init()
+        private void InitCore()
         {
-            initCore();
-            initMath();
-        }
-
-        private void initCore()
-        {
-            AddBuiltin("empty", a => a.parn(0, b => Result.Empty));
-            AddBuiltin("bool", a => a.parn(1, b => new Result() { val = new List<object> { b.Bool() } }));
-            AddBuiltin("not", a => a.parn(1, b => new Result() { val = new List<object> { !b.Bool() } }));
-            AddBuiltin("is_empty", a => a.parn(b => new Result() { val = new List<object>() { b.IsEmpty } }));
-            AddBuiltin("is_single", a => a.parn(b => new Result() { val = new List<object>() { b.val.Count() == 1 } }));
-            AddBuiltin("is_many", a => a.parn(b => new Result() { val = new List<object>() { b.val.Count() > 1 } }));
-            AddBuiltin("equal", a => a.parn(2, b => b.compare(CompareType.Equal)));
-            AddBuiltin("not_equal", a => a.parn(2, b => b.compare(CompareType.NotEqual)));
-            AddBuiltin("lt", a => a.parn(2, b => b.compare(CompareType.LessThan)));
-            AddBuiltin("gt", a => a.parn(2, b => b.compare(CompareType.GreaterThan)));
-            AddBuiltin("lte", a => a.parn(2, b => b.compare(CompareType.NotGreaterThan)));
-            AddBuiltin("gte", a => a.parn(2, b => b.compare(CompareType.NotLessThan)));
-            mapBuiltins.Add("match", a => a.parn(3, b => new Result()
+            AddBuiltin("empty", a => a.Parn(0, b => Result.Empty));
+            AddBuiltin("bool", a => a.Parn(1, b => new Result() { Val = new List<object> { b.Bool() } }));
+            AddBuiltin("not", a => a.Parn(1, b => new Result() { Val = new List<object> { !b.Bool() } }));
+            AddBuiltin("is_empty", a => a.Parn(b => new Result() { Val = new List<object>() { b.IsEmpty } }));
+            AddBuiltin("is_single", a => a.Parn(b => new Result() { Val = new List<object>() { b.Val.Count() == 1 } }));
+            AddBuiltin("is_many", a => a.Parn(b => new Result() { Val = new List<object>() { b.Val.Count() > 1 } }));
+            AddBuiltin("equal", a => a.Parn(2, b => b.Compare(CompareType.Equal)));
+            AddBuiltin("not_equal", a => a.Parn(2, b => b.Compare(CompareType.NotEqual)));
+            AddBuiltin("lt", a => a.Parn(2, b => b.Compare(CompareType.LessThan)));
+            AddBuiltin("gt", a => a.Parn(2, b => b.Compare(CompareType.GreaterThan)));
+            AddBuiltin("lte", a => a.Parn(2, b => b.Compare(CompareType.NotGreaterThan)));
+            AddBuiltin("gte", a => a.Parn(2, b => b.Compare(CompareType.NotLessThan)));
+            _mapBuiltins.Add("match", a => a.Parn(3, b => new Result()
             {
-                type = b.type,
-                val =
-                Convert.ToBoolean(b.val.First()) ? b.val.Skip(1).Take(1) : b.val.Skip(2).Take(1)
+                Type = b.Type,
+                Val =
+                Convert.ToBoolean(b.Val.First()) ? b.Val.Skip(1).Take(1) : b.Val.Skip(2).Take(1)
             }));
-            mapBuiltins.Add("if", a => a.parn(2, b => new Result()
+            _mapBuiltins.Add("if", a => a.Parn(2, b => new Result()
             {
-                type = b.type,
-                val =
-                Convert.ToBoolean(b.val.First()) ? b.val.Skip(1).Take(1) : Result.Empty.val
+                Type = b.Type,
+                Val =
+                Convert.ToBoolean(b.Val.First()) ? b.Val.Skip(1).Take(1) : Result.Empty.Val
             }));
-            AddBuiltin("range", a => a.par2range());
-            AddLazy("match", 3, (a, env) => a.ElementAt(0).eval(env).Bool() ? a.ElementAt(1).eval(env) : a.ElementAt(2).eval(env));
-            AddLazy("if", 2, (a, env) => a.ElementAt(0).eval(env).Bool() ? a.ElementAt(1).eval(env) : Result.Empty);
-            AddLazy("dummy", 1, (a, env) => a.ElementAt(0).eval(env));
+            AddBuiltin("range", a => a.Par2Range());
+            AddLazy("match", 3, (a, env) => a[0].Eval(env).Bool() ? a[1].Eval(env) : a[2].Eval(env));
+            AddLazy("if", 2, (a, env) => a[0].Eval(env).Bool() ? a[1].Eval(env) : Result.Empty);
+            AddLazy("dummy", 1, (a, env) => a[0].Eval(env));
         }
 
-        private void initMath()
+        private void InitMath()
         {
-            AddBuiltin("E", a => a.parn(0, b => new Result() { type = ResultType.Double, val = new List<object>() { Math.E } }));
-            AddBuiltin("PI", a => a.parn(0, b => new Result() { type = ResultType.Double, val = new List<object>() { Math.PI } }));
-            AddBuiltin("square", a => a.par1(b => Math.Pow(Convert.ToDouble(b), 2.0), ResultType.Double));
-            AddBuiltin("sqrt", a => a.par1(b => Math.Sqrt(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("sin", a => a.par1(b => Math.Sin(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("cos", a => a.par1(b => Math.Cos(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("tan", a => a.par1(b => Math.Tan(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("asin", a => a.par1(b => Math.Asin(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("acos", a => a.par1(b => Math.Acos(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("atan", a => a.par1(b => Math.Atan(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("sinh", a => a.par1(b => Math.Sinh(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("cosh", a => a.par1(b => Math.Cosh(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("tanh", a => a.par1(b => Math.Tanh(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("sign", a => a.par1(b => Math.Sign(Convert.ToDouble(b)), ResultType.Long));
-            AddBuiltin("abs", a => a.par1a(b => Math.Abs(Convert.ToInt64(b)), b => Math.Abs(Convert.ToDouble(b))));
-            AddBuiltin("exp", a => a.par1(b => Math.Exp(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("floor", a => a.par1(b => Math.Floor(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("ceiling", a => a.par1(b => Math.Ceiling(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("log", a => a.par1(b => Math.Log(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("log10", a => a.par1(b => Math.Log10(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("round", a => a.par1(b => Math.Round(Convert.ToDouble(b)), ResultType.Double));
-            AddBuiltin("pow", a => a.par2((x, y) => Math.Pow(Convert.ToDouble(x), Convert.ToDouble(y)), ResultType.Double));
-            AddBuiltin("max", a => a.par2a((x, y) => Math.Max(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Max(Convert.ToDouble(x), Convert.ToDouble(y))));
-            AddBuiltin("min", a => a.par2a((x, y) => Math.Min(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Min(Convert.ToDouble(x), Convert.ToDouble(y))));
-            AddBuiltin("sum", a => a.par2a((x, y) => Convert.ToInt64(x) + Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) + Convert.ToDouble(y)));
-            AddBuiltin("product", a => a.par2a((x, y) => Convert.ToInt64(x) * Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) * Convert.ToDouble(y)));
+            AddBuiltin("E", a => a.Parn(0, b => new Result() { Type = ResultType.Double, Val = new List<object>() { Math.E } }));
+            AddBuiltin("PI", a => a.Parn(0, b => new Result() { Type = ResultType.Double, Val = new List<object>() { Math.PI } }));
+            AddBuiltin("square", a => a.Par1(b => Math.Pow(Convert.ToDouble(b), 2.0), ResultType.Double));
+            AddBuiltin("sqrt", a => a.Par1(b => Math.Sqrt(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("sin", a => a.Par1(b => Math.Sin(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("cos", a => a.Par1(b => Math.Cos(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("tan", a => a.Par1(b => Math.Tan(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("asin", a => a.Par1(b => Math.Asin(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("acos", a => a.Par1(b => Math.Acos(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("atan", a => a.Par1(b => Math.Atan(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("sinh", a => a.Par1(b => Math.Sinh(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("cosh", a => a.Par1(b => Math.Cosh(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("tanh", a => a.Par1(b => Math.Tanh(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("sign", a => a.Par1(b => Math.Sign(Convert.ToDouble(b)), ResultType.Long));
+            AddBuiltin("abs", a => a.Par1A(b => Math.Abs(Convert.ToInt64(b)), b => Math.Abs(Convert.ToDouble(b))));
+            AddBuiltin("exp", a => a.Par1(b => Math.Exp(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("floor", a => a.Par1(b => Math.Floor(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("ceiling", a => a.Par1(b => Math.Ceiling(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("log", a => a.Par1(b => Math.Log(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("log10", a => a.Par1(b => Math.Log10(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("round", a => a.Par1(b => Math.Round(Convert.ToDouble(b)), ResultType.Double));
+            AddBuiltin("pow", a => a.Par2((x, y) => Math.Pow(Convert.ToDouble(x), Convert.ToDouble(y)), ResultType.Double));
+            AddBuiltin("max", a => a.Par2A((x, y) => Math.Max(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Max(Convert.ToDouble(x), Convert.ToDouble(y))));
+            AddBuiltin("min", a => a.Par2A((x, y) => Math.Min(Convert.ToInt64(x), Convert.ToInt64(y)), (x, y) => Math.Min(Convert.ToDouble(x), Convert.ToDouble(y))));
+            AddBuiltin("sum", a => a.Par2A((x, y) => Convert.ToInt64(x) + Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) + Convert.ToDouble(y)));
+            AddBuiltin("product", a => a.Par2A((x, y) => Convert.ToInt64(x) * Convert.ToInt64(y), (x, y) => Convert.ToDouble(x) * Convert.ToDouble(y)));
         }
 
-        public void builtin(IInterpreter itpr, StandardIO io, Env env)
+        public void InitBuiltin(IInterpreter itpr, IStandardIo io, Env env)
         {
-            this.itpr = itpr;
-            this.env = env;
-            io.OUT.WriteLine("Builtin :: Loading...");
-            init();
+            _itpr = itpr;
+            _env = env;
+            io.Out.WriteLine("Builtin :: Loading...");
+            Init();
 
             var modules = new IModule[]
             {
@@ -129,33 +116,33 @@ namespace SimpleConsole
 
             foreach (var item in modules)
             {
-                io.OUT.WriteLine($"Builtin :: {item.Name}");
+                io.Out.WriteLine($"Builtin :: {item.Name}");
                 AddModule(item);
             }
 
             var builtinFuncs = new Fun[]
             {
-                new BuiltinFun(evalBuiltin)
+                new BuiltinFun(EvalBuiltin)
                 {
-                    name = "builtin",
-                    limit = false,
-                    args = new List<string>() { "name", "args" }
+                    FunName = "builtin",
+                    Limit = false,
+                    Args = new List<string>() { "name", "args" }
                 },
-                new BuiltinFun(evalType)
+                new BuiltinFun(EvalType)
                 {
-                    name = "type",
-                    limit = true,
-                    args = new List<string>() { "t" }
+                    FunName = "type",
+                    Limit = true,
+                    Args = new List<string>() { "t" }
                 },
-                new BuiltinFun(evalLoad)
+                new BuiltinFun(EvalLoad)
                 {
-                    name = "load",
-                    limit = true,
-                    args = new List<string>() { "name" }
+                    FunName = "load",
+                    Limit = true,
+                    Args = new List<string>() { "name" }
                 },
-                new LazyFun(evalLazy)
+                new LazyFun(EvalLazy)
                 {
-                    name = "lazy"
+                    FunName = "lazy"
                 },
             };
             foreach (var item in builtinFuncs)
@@ -169,55 +156,52 @@ load Core
             env.LockVariable = true;
             foreach (var item in code.Split('\n'))
             {
-                itpr.input(item);
+                itpr.Input(item);
             }
             env.LockVariable = false;
 
-            io.OUT.WriteLine("Builtin :: OK");
+            io.Out.WriteLine("Builtin :: OK");
         }
 
-        public Result evalBuiltin(string name, Result param)
+        private Result EvalBuiltin(string name, Result param)
         {
-            if (mapBuiltins.ContainsKey(name))
-                return mapBuiltins[name](param);
-            throw new SCException($"'{name}' not found.");
+            if (_mapBuiltins.ContainsKey(name))
+                return _mapBuiltins[name](param);
+            throw new ScException($"'{name}' not found.");
         }
 
-        public Result evalType(string name, Result param)
+        private Result EvalType(string name, Result param)
         {
-            var v = env.queryValueAll(name);
+            var v = _env.QueryValueAll(name);
             if (v == null)
                 return new StringResult($"'{name}' not found.");
             if (v is Val || v is Binop)
-                return new StringResult(v.eval(env).GetTypeString());
+                return new StringResult(v.Eval(_env).GetTypeString());
             if (v is Fun)
                 return new StringResult(v.Name);
             return Result.Empty;
         }
 
-        public Result evalLoad(string name, Result param)
+        private Result EvalLoad(string name, Result param)
         {
-            if (mapModules.ContainsKey(name))
+            if (_mapModules.ContainsKey(name))
             {
-                if (loadedModules.Contains(name))
+                if (_loadedModules.Contains(name))
                     return new StringResult($"Module :: {name} has been loaded.");
-                loadedModules.Add(name);
-                itpr.addTask(() => mapModules[name].load(itpr, env));
+                _loadedModules.Add(name);
+                _itpr.AddTask(() => _mapModules[name].Load(_itpr, _env));
                 return new StringResult($"Module :: {name} loaded.");
             }
             return new StringResult($"Module :: {name} not found.");
         }
 
-        public Result evalLazy(string name, IEnumerable<Expr> exps, Env env)
+        private Result EvalLazy(string name, IList<Expr> exps, Env env)
         {
-            if (mapLazys.ContainsKey(name))
-            {
-                var lazy = mapLazys[name];
-                if (lazy.Item1 >= 0 && exps.Count() != lazy.Item1)
-                    throw new SCException($"需要{lazy.Item1}个参数");
-                return lazy.Item2(exps, env);
-            }
-            return new StringResult($"'{name}' not found.");
+            if (!_mapLazys.ContainsKey(name)) return new StringResult($"'{name}' not found.");
+            var lazy = _mapLazys[name];
+            if (lazy.Item1 >= 0 && exps.Count != lazy.Item1)
+                throw new ScException($"需要{lazy.Item1}个参数");
+            return lazy.Item2(exps, env);
         }
     }
 }

@@ -41,7 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Environment\Env.cs" />
-    <Compile Include="Exception\SCException.cs" />
+    <Compile Include="Exception\ScException.cs" />
     <Compile Include="Expression\Binop.cs" />
     <Compile Include="Expression\BuiltinFun.cs" />
     <Compile Include="Expression\Expr.cs" />
@@ -55,13 +55,14 @@
     <Compile Include="Module\CoreModule.cs" />
     <Compile Include="Module\IModule.cs" />
     <Compile Include="Module\MathModule.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Typing\EnumHelper.cs" />
     <Compile Include="Typing\OpType.cs" />
     <Compile Include="Typing\Result.cs" />
     <Compile Include="Util\LazyRange.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /r /y $(TargetDir)$(TargetName).dll G:\Web\Bin</PostBuildEvent>

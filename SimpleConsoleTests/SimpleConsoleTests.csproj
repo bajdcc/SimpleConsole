@@ -52,13 +52,15 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Interpreter\InterpreterTests.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SimpleConsole\SimpleConsole.csproj">
       <Project>{02DDB2F1-1347-4395-834B-B6E84E4E5A0E}</Project>
       <Name>SimpleConsole</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

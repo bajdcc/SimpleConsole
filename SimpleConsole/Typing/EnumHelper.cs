@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleConsole.Typing
 {
-    class EnumHelper
+    internal static class EnumHelper
     {
         internal static TAttr GetAttrOfEnum<TAttr, TEnum>(object value)
             where TAttr : Attribute
@@ -20,7 +16,7 @@ namespace SimpleConsole.Typing
             if (name == null)
                 return default(TAttr);
             var objs = enumType.GetField(name).GetCustomAttributes(typeof(TAttr), false);
-            if (objs == null || objs.Length == 0)
+            if (objs.Length == 0)
             {
                 return default(TAttr);
             }

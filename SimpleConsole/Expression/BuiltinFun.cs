@@ -1,37 +1,36 @@
 ﻿using SimpleConsole.Typing;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleConsole.Expression
 {
-    class BuiltinFun : Fun
+    internal class BuiltinFun : Fun
     {
-        private Func<string, Result, Result> evalBuiltin;
+        private readonly Func<string, Result, Result> _evalBuiltin;
 
         public BuiltinFun(Func<string, Result, Result> func)
         {
-            evalBuiltin = func;
-            limit = false;
-            writable = false;
+            _evalBuiltin = func;
+            Limit = false;
+            Writable = false;
         }
 
-        public override string Name { get { return "Builtin"; } }
+        public override string Name => "Builtin";
 
-        public override Result eval(Env env)
+        public override Result Eval(Env env)
         {
-            var x = env.queryValue(args.First()) as Val;
-            if (args.Count() == 1)
-                return evalBuiltin(x.name, Result.Empty);
-            var xs = env.queryValue(args.Skip(1).First()) as Val;
-            return evalBuiltin(x.name, xs.result);
+            var x = env.QueryValue(Args.First()) as Val;
+            if (x == null) throw new ArgumentNullException(nameof(x));
+            if (Args.Count() == 1)
+                return _evalBuiltin(x.ValName, Result.Empty);
+            var xs = env.QueryValue(Args.Skip(1).First()) as Val;
+            if (xs == null) throw new ArgumentNullException(nameof(xs));
+            return _evalBuiltin(x.ValName, xs.Result);
         }
 
         public override string ToString()
         {
-            return $"builtin {name}{string.Concat(args.Select(a => " " + a))}";
+            return $"builtin {FunName}{string.Concat(Args.Select(a => " " + a))}";
         }
     }
 }

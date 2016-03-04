@@ -2,32 +2,31 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleConsole.Expression
 {
-    class LazyFun : Fun
+    internal class LazyFun : Fun
     {
-        private Func<string, IEnumerable<Expr>, Env, Result> evalLazy;
+        private readonly Func<string, IList<Expr>, Env, Result> _evalLazy;
 
-        public LazyFun(Func<string, IEnumerable<Expr>, Env, Result> func)
+        public LazyFun(Func<string, IList<Expr>, Env, Result> func)
         {
-            evalLazy = func;
-            limit = false;
-            writable = false;
+            _evalLazy = func;
+            Limit = false;
+            Writable = false;
         }
 
-        public override string Name { get { return "Lazy"; } }
+        public override string Name => "Lazy";
 
-        public Result eval(string name, IEnumerable<Expr> exps, Env env)
+        public Result Eval(string funName, IList<Expr> exps, Env env)
         {
-            return evalLazy(name, exps, env);
+            if (funName == null) throw new ArgumentNullException(nameof(funName));
+            return _evalLazy(funName, exps, env);
         }
 
         public override string ToString()
         {
-            return $"lazy {name}{string.Concat(args.Select(a => " " + a))}";
+            return $"lazy {FunName}{string.Concat(Args.Select(a => " " + a))}";
         }
     }
 }

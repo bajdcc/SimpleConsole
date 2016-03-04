@@ -1,41 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleConsole.Typing
 {
     [AttributeUsage(AttributeTargets.Field)]
-    class SCOperationAttribute : DescriptionAttribute
+    internal class ScOperationAttribute : DescriptionAttribute
     {
-        private int leftLevel;
-        private int rightLevel;
-
         /// <summary>
         /// 左结合优先级
         /// </summary>
-        public int LeftLevel
-        {
-            get
-            {
-                return leftLevel;
-            }
-        }
+        public int LeftLevel { get; }
 
         /// <summary>
         /// 右结合优先级
         /// </summary>
-        public int RightLevel
-        {
-            get
-            {
-                return rightLevel;
-            }
-        }
+        public int RightLevel { get; }
 
-        public SCOperationAttribute()
+        public ScOperationAttribute()
         {
 
         }
@@ -46,43 +28,43 @@ namespace SimpleConsole.Typing
         /// <param name="description">操作符</param>
         /// <param name="leftLevel">左结合优先级</param>
         /// <param name="rightLevel">右结合优先级</param>
-        public SCOperationAttribute(string description, int leftLevel, int rightLevel) : base(description)
+        public ScOperationAttribute(string description, int leftLevel, int rightLevel) : base(description)
         {
-            this.leftLevel = leftLevel;
-            this.rightLevel = rightLevel;
+            LeftLevel = leftLevel;
+            RightLevel = rightLevel;
         }
     }
 
-    enum OpType
+    internal enum OpType
     {
-        [SCOperation("=", 4, 5)]
+        [ScOperation("=", 4, 5)]
         Equal,
 
-        [SCOperation("|", 9, 9)]
+        [ScOperation("|", 9, 9)]
         Match,
 
-        [SCOperation("+", 10, 10)]
+        [ScOperation("+", 10, 10)]
         Add,
 
-        [SCOperation("-", 10, 10)]
+        [ScOperation("-", 10, 10)]
         Subtract,
 
-        [SCOperation("*", 20, 20)]
+        [ScOperation("*", 20, 20)]
         Multiply,
 
-        [SCOperation("/", 20, 20)]
+        [ScOperation("/", 20, 20)]
         Divide,
 
-        [SCOperation("%", 20, 20)]
+        [ScOperation("%", 20, 20)]
         Mod,
 
-        [SCOperation()]
+        [ScOperation()]
         Unknown,
     }
 
-    static class OpTypeHelper
+    internal static class OpTypeHelper
     {
-        static Dictionary<string, OpType> dict = new Dictionary<string, OpType>();
+        private static readonly Dictionary<string, OpType> Dict = new Dictionary<string, OpType>();
 
         static OpTypeHelper()
         {
@@ -91,21 +73,21 @@ namespace SimpleConsole.Typing
                 var attr = item.GetAttr();
                 if (attr.Description != null)
                 {
-                    dict.Add(attr.Description, item);
+                    Dict.Add(attr.Description, item);
                 }
             }
         }
 
-        public static SCOperationAttribute GetAttr(this OpType type)
+        public static ScOperationAttribute GetAttr(this OpType type)
         {
-            return EnumHelper.GetAttrOfEnum<SCOperationAttribute, OpType>(type);
+            return EnumHelper.GetAttrOfEnum<ScOperationAttribute, OpType>(type);
         }
 
         public static OpType GetTypeOfString(string str)
         {
-            if (dict.ContainsKey(str))
+            if (Dict.ContainsKey(str))
             {
-                return dict[str];
+                return Dict[str];
             }
             return OpType.Unknown;
         }

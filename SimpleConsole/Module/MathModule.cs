@@ -1,22 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SimpleConsole.Module
+﻿namespace SimpleConsole.Module
 {
-    class MathModule : IModule
+    internal class MathModule : IModule
     {
-        public string Name
-        {
-            get
-            {
-                return "Math";
-            }
-        }
+        public string Name => "Math";
 
-        public void load(IInterpreter itpr, Env env)
+        public void Load(IInterpreter itpr, Env env)
         {
             var code = @"
 E = builtin E
@@ -50,7 +38,7 @@ fnx product _ => builtin product _
             env.LockVariable = true;
             foreach (var item in code.Split('\n'))
             {
-                itpr.input(item);
+                itpr.Input(item);
             }
             env.LockVariable = false;
         }

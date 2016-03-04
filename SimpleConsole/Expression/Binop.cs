@@ -1,54 +1,52 @@
-﻿using SimpleConsole.Typing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using SimpleConsole.Typing;
 
 namespace SimpleConsole.Expression
 {
-    class Binop : Expr
+    internal class Binop : Expr
     {
         /// <summary>
         /// 左子表达式
         /// </summary>
-        public Expr op1 { set; get; }
+        public Expr Op1 { set; get; }
         /// <summary>
         /// 右子表达式
         /// </summary>
-        public Expr op2 { set; get; }
+        public Expr Op2 { set; get; }
         /// <summary>
         /// 运算符
         /// </summary>
-        public OpType type { set; get; } = OpType.Unknown;
+        public OpType Type { set; get; } = OpType.Unknown;
         /// <summary>
         /// 是否为括号表达式
         /// </summary>
-        public bool brace { set; get; }
+        public bool Brace { set; get; }
 
-        public override Result eval(Env env)
+        public override Result Eval(Env env)
         {
-            switch (type)
+            switch (Type)
             {
                 case OpType.Match:
-                case OpType.Add: return op1.eval(env) + op2.eval(env);
-                case OpType.Subtract: return op1.eval(env) - op2.eval(env);
-                case OpType.Multiply: return op1.eval(env) * op2.eval(env);
-                case OpType.Divide: return op1.eval(env) / op2.eval(env);
-                case OpType.Mod: return op1.eval(env) % op2.eval(env);
+                case OpType.Add: return Op1.Eval(env) + Op2.Eval(env);
+                case OpType.Subtract: return Op1.Eval(env) - Op2.Eval(env);
+                case OpType.Multiply: return Op1.Eval(env) * Op2.Eval(env);
+                case OpType.Divide: return Op1.Eval(env) / Op2.Eval(env);
+                case OpType.Mod: return Op1.Eval(env) % Op2.Eval(env);
                 case OpType.Equal:
-                    var o = op1 as Val;
-                    if (!o.writable)
-                        throw new SCException($"变量'{o.name}'不可修改");
-                    o.result = op2.eval(env);
-                    env.putValue(o.name, op1);
-                    return o.result;
+                    var o = Op1 as Val;
+                    if (o == null)
+                        throw new NullReferenceException(nameof(o));
+                    if (!o.Writable)
+                        throw new ScException($"变量'{o.ValName}'不可修改");
+                    o.Result = Op2.Eval(env);
+                    env.PutValue(o.ValName, Op1);
+                    return o.Result;
                 default:
-                    throw new SCException($"未知运算符{type.GetAttr().Description}");
+                    throw new ScException($"未知运算符{Type.GetAttr().Description}");
             }
         }
 
-        private static string getOpDesc(OpType op)
+        private static string GetOpDesc(OpType op)
         {
             return op.GetAttr().Description;
         }
@@ -57,20 +55,21 @@ namespace SimpleConsole.Expression
         /// 递归查找，自下向上返回
         /// </summary>
         /// <param name="type"></param>
+        /// <param name="parent"></param>
         /// <returns></returns>
         public override Expr GetMostLeftCombineAtom(OpType type, Expr parent)
         {
-            if (brace)
+            if (Brace)
                 return parent ?? this;
-            var atom = op1.GetMostLeftCombineAtom(type, this);
+            var atom = Op1.GetMostLeftCombineAtom(type, this);
             if (atom == null)
-                return type.GetAttr().LeftLevel >= this.type.GetAttr().RightLevel ? (parent ?? this) : null;
+                return type.GetAttr().LeftLevel >= Type.GetAttr().RightLevel ? (parent ?? this) : null;
             return atom;
         }
 
         public override string ToString()
         {
-            return $"({op1} {getOpDesc(type)} {op2})";
+            return $"({Op1} {GetOpDesc(Type)} {Op2})";
         }
     }
 }

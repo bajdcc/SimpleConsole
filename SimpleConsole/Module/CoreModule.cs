@@ -1,22 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SimpleConsole.Module
+﻿namespace SimpleConsole.Module
 {
-    class CoreModule : IModule
+    internal class CoreModule : IModule
     {
-        public string Name
-        {
-            get
-            {
-                return "Core";
-            }
-        }
+        public string Name => "Core";
 
-        public void load(IInterpreter itpr, Env env)
+        public void Load(IInterpreter itpr, Env env)
         {
             var code = @"
 empty = builtin empty
@@ -42,7 +30,7 @@ fn range x y => builtin range x y
             env.LockVariable = true;
             foreach (var item in code.Split('\n'))
             {
-                itpr.input(item);
+                itpr.Input(item);
             }
             env.LockVariable = false;
         }

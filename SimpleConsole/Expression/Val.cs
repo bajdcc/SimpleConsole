@@ -1,37 +1,32 @@
 ﻿using SimpleConsole.Typing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleConsole.Expression
 {
-    class Val : Expr
+    internal class Val : Expr
     {
         /// <summary>
         /// 变量名
         /// </summary>
-        public string name { set; get; }
+        public string ValName { set; get; }
 
         /// <summary>
         /// 结果
         /// </summary>
-        public Result result { set; get; } = Result.Empty;
+        public Result Result { set; get; } = Result.Empty;
 
         /// <summary>
         /// 可修改
         /// </summary>
-        public bool writable { set; get; } = true;
+        public bool Writable { set; get; } = true;
 
-        public override Result eval(Env env)
+        public override Result Eval(Env env)
         {
-            return result.IsEmpty ? env.eval(this, name) : result;
+            return Result.IsEmpty ? env.Eval(this, ValName) : Result;
         }
 
         public override string ToString()
         {
-            return name ?? result.ToString();
+            return ValName ?? Result.ToString();
         }
     }        
 }

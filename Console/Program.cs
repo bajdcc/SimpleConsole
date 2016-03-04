@@ -1,17 +1,13 @@
 ﻿using SimpleConsole;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TestConsole
 {
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
-            IInterpreter itpr = InterpreterFactory.Create(Console.In, Console.Out);
+            var itpr = InterpreterFactory.Create(Console.In, Console.Out);
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -22,9 +18,9 @@ namespace TestConsole
                 try
                 {
                     string str;
-                    var val = itpr.input(input, out str);
+                    var val = itpr.Input(input, out str);
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    itpr.print(val);
+                    itpr.Print(val);
                 }
                 catch (Exception e)
                 {

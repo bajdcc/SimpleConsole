@@ -1,22 +1,17 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SimpleConsole;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimpleConsole.Tests
 {
     [TestClass]
     public class InterpreterTests
     {
-        private IInterpreter itpr = InterpreterFactory.Create(Console.In, Console.Out);
+        private readonly IInterpreter _itpr = InterpreterFactory.Create(Console.In, Console.Out);
 
         private void Test(string expect, string input)
         {
             string str;
-            var r = itpr.input(input, out str).ToString();
+            var r = _itpr.Input(input, out str).ToString();
             Assert.AreEqual(expect, r);
             Console.WriteLine($"{str} => {r}");
         }

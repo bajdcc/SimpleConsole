@@ -1,108 +1,101 @@
-﻿using SimpleConsole.Expression;
-using SimpleConsole.Typing;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SimpleConsole.Expression;
+using SimpleConsole.Typing;
 
 namespace SimpleConsole
 {
-    class Env
+    internal class Env
     {
-        private const int STACK_DEPTH = 500;
-        private List<Dictionary<string, Expr>> envStack = new List<Dictionary<string, Expr>>();
-        private StandardIO IO; 
+        private const int StackDepth = 500;
+        private readonly List<Dictionary<string, Expr>> _envStack = new List<Dictionary<string, Expr>>();
 
-        public bool LockVariable { set; get; } = false;
-        public bool LookAheadFunc { set; get; } = true;
-
-        public Env(StandardIO io)
+        public Env()
         {
-            IO = io;
-            pushNewEnv();
+            PushNewEnv();
         }
 
-        public void pushNewEnv()
+        public bool LockVariable { set; get; }
+
+        public void PushNewEnv()
         {
-            if (envStack.Count > STACK_DEPTH)
-                throw new SCException("堆栈溢出");
-            envStack.Insert(0, new Dictionary<string, Expr>());
+            if (_envStack.Count > StackDepth)
+                throw new ScException("堆栈溢出");
+            _envStack.Insert(0, new Dictionary<string, Expr>());
         }
 
-        public void popEnv()
+        public void PopEnv()
         {
-            envStack.RemoveAt(0);
+            _envStack.RemoveAt(0);
         }
 
-        public bool isTopEnv()
+        public bool IsTopEnv()
         {
-            return envStack.Count == 1;
+            return _envStack.Count == 1;
         }
 
-        public void putValue(string name, Expr exp)
+        public void PutValue(string name, Expr exp)
         {
-            if (envStack[0].ContainsKey(name))
-                envStack[0][name] = exp;
+            if (_envStack[0].ContainsKey(name))
+                _envStack[0][name] = exp;
             else
-                envStack[0].Add(name, exp);
+                _envStack[0].Add(name, exp);
         }
 
-        public Expr queryValue(string name)
+        public Expr QueryValue(string name)
         {
-            if (envStack[0].ContainsKey(name))
-                return envStack[0][name];
-            if (envStack[envStack.Count - 1].ContainsKey(name))
+            if (_envStack[0].ContainsKey(name))
+                return _envStack[0][name];
+            if (_envStack[_envStack.Count - 1].ContainsKey(name))
             {
-                var exp = envStack[envStack.Count - 1][name];
+                var exp = _envStack[_envStack.Count - 1][name];
                 if (exp is Fun)
                     return exp;
             }
-            throw new SCException($"变量'{name}'不存在");
+            throw new ScException($"变量'{name}'不存在");
         }
 
-        public Expr queryValueUnsafe(string name)
+        public Expr QueryValueUnsafe(string name)
         {
-            if (envStack[0].ContainsKey(name))
-                return envStack[0][name];
-            if (envStack[envStack.Count - 1].ContainsKey(name))
+            if (_envStack[0].ContainsKey(name))
+                return _envStack[0][name];
+            if (_envStack[_envStack.Count - 1].ContainsKey(name))
             {
-                var exp = envStack[envStack.Count - 1][name];
+                var exp = _envStack[_envStack.Count - 1][name];
                 if (exp is Fun)
                     return exp;
             }
             return null;
         }
 
-        public Result eval(Expr caller, string name)
+        public Result Eval(Expr caller, string name)
         {
             if (name == null)
                 return Result.Empty;
-            var v = queryValue(name);
+            var v = QueryValue(name);
             if (v == caller)
                 return Result.Empty;
-            return v.eval(this);
+            return v.Eval(this);
         }
 
-        public Expr queryValueAll(string name)
+        public Expr QueryValueAll(string name)
         {
-            foreach (var item in envStack)
+            foreach (var item in _envStack.Where(item => item.ContainsKey(name)))
             {
-                if (item.ContainsKey(name))
-                    return item[name];
+                return item[name];
             }
-            throw new SCException("变量不存在");
+            throw new ScException("变量不存在");
         }
 
-        public void clear()
+        public void Clear()
         {
-            if (envStack.Count > 1)
-                envStack.RemoveRange(0, envStack.Count - 1);
+            if (_envStack.Count > 1)
+                _envStack.RemoveRange(0, _envStack.Count - 1);
         }
 
         public override string ToString()
         {
-            return string.Join(" ", envStack[0].Keys.OrderBy(a => a));
+            return string.Join(" ", _envStack[0].Keys.OrderBy(a => a));
         }
     }
 }
